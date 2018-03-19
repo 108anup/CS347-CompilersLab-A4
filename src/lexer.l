@@ -3,7 +3,7 @@ L                               [a-zA-Z_]
 WS                              [ \t\n\v\f]
 
 %{
-#include "y.tab.h"
+#include "grammar.tab.hpp"
 %}
 
 %% 

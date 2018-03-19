@@ -6,11 +6,14 @@
 %token GET_CLOCK_SPEED DISCARD_JOB RUN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
 %token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON SCHED
 
+%nonassoc "UIF"
+%nonassoc ELSE
 
 %{
+  #include <iostream>
   extern int yylex();
   extern int yyerror(char *);
-  int yydebug=1;
+  using namespace std;
 %}
 
 %%
@@ -34,6 +37,7 @@ declaration
 
 declarator
 : ID
+| declarator OPEN_SQUARE assignment_expression CLOSED_SQUARE
 | declarator OPEN_SQUARE CLOSED_SQUARE
 ;
 
@@ -58,6 +62,7 @@ primary_expression
 | OPEN_BRACKET expression CLOSED_BRACKET
 | constructor
 | mem_func
+| OPEN_SQUARE argument_expression_list CLOSED_SQUARE
 ;
 
 postfix_expression
@@ -66,23 +71,10 @@ postfix_expression
 | postfix_expression OPEN_BRACKET CLOSED_BRACKET
 | postfix_expression OPEN_BRACKET argument_expression_list CLOSED_BRACKET
 | postfix_expression DOT ID
-| ID DOT mem_func
+| postfix_expression DOT mem_func
 | postfix_expression PTR_OP ID
 | postfix_expression INC_OP
 | postfix_expression DEC_OP
-| OPEN_CURLY initializer_list CLOSED_CURLY
-| OPEN_SQUARE initializer_list CLOSED_SQUARE
-;
-
-initializer
-: OPEN_CURLY initializer_list CLOSED_CURLY
-| OPEN_SQUARE initializer_list CLOSED_SQUARE
-| assignment_expression
-;
-
-initializer_list
-: initializer
-| initializer_list COMMA initializer
 ;
 
 argument_expression_list
@@ -184,7 +176,7 @@ iteration_statement
 
 selection_statement
 : IF OPEN_BRACKET expression CLOSED_BRACKET statement ELSE statement
-| IF OPEN_BRACKET expression CLOSED_BRACKET statement
+| IF OPEN_BRACKET expression CLOSED_BRACKET statement %prec "UIF"
 ;
 
 expression_statement
@@ -236,7 +228,7 @@ job_param5
 ;
 
 param_list_proc
-: proc_param1 COMMA proc_param2 COMMA proc_param3 opt_proc_param4 opt_proc_param5 opt_proc_param6
+: proc_param1 COMMA proc_param2 COMMA proc_param3 opt_proc_param4
 
 ;
 
@@ -259,18 +251,18 @@ proc_param3
 
 opt_proc_param4
 : L2_MEMORY assign_colon assignment_expression
-| L2_MEMORY assign_colon assignment_expression COMMA
+| L2_MEMORY assign_colon assignment_expression COMMA opt_proc_param5
 | assignment_expression
-| assignment_expression COMMA
-| /* EPSILON */
+| assignment_expression COMMA opt_proc_param5
+| opt_proc_param5
 ;
 
 opt_proc_param5
 : SCHED assign_colon assignment_expression
 | assignment_expression
-| SCHED assign_colon assignment_expression COMMA
-| assignment_expression COMMA
-| /* EPSILON */
+| SCHED assign_colon assignment_expression COMMA opt_proc_param6
+| assignment_expression COMMA opt_proc_param6
+| opt_proc_param6
 ;
 
 opt_proc_param6
@@ -334,7 +326,7 @@ opt_link_param5
 ;
 
 param_list_cluster 
-: cluster_param1 COMMA cluster_param2 COMMA cluster_param3 COMMA cluster_param4 opt_cluster_param5 opt_cluster_param6
+: cluster_param1 COMMA cluster_param2 COMMA cluster_param3 COMMA cluster_param4 opt_cluster_param5
 ;
 
 cluster_param1
@@ -360,9 +352,9 @@ cluster_param4
 opt_cluster_param5
 : SCHED assign_colon assignment_expression
 | assignment_expression
-| SCHED assign_colon assignment_expression COMMA
-| assignment_expression COMMA
-| /* EPSILON */
+| SCHED assign_colon assignment_expression COMMA opt_cluster_param6
+| assignment_expression COMMA opt_cluster_param6
+| opt_cluster_param6
 ;
 
 opt_cluster_param6
@@ -408,5 +400,6 @@ int yyerror(char *s){
 }
 
 int main(){
-	return yyparse();
+    yydebug = 1;
+return yyparse();
 }
