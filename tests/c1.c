@@ -8,7 +8,7 @@ ram = Memory(memory_type= 'primary', mem_size = 2048, name = "ram1");
 proc_1 = Processor(isa = 'ARM', clock_speed : 40, l1_memory = mem1);
 link_1 = Link(start_point = "proc1", end_point= "ram1", 40, 50);
 
-proc_1.submit_jobs({job_1,job_2,job_3});
+proc_1.submit_jobs([job_1,job_2,job_3]);
 
 run(proc_1);
 

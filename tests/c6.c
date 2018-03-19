@@ -15,7 +15,7 @@ proc_2 = Processor(isa = 'AMD', clock_speed : 78, l1_memory = mem2);
 proc_3 = Processor(isa = 'AMD', clock_speed : 78, l1_memory = mem3);
 
 mono_sched = Scheduler(algo = "Monolithic");
-cluster_1 = Cluster(processors={proc_2, proc_3},
+cluster_1 = Cluster(processors=[proc_2, proc_3],
                     topology = "star", 100, 80, sched = mono_sched, name = "cluster1");
 
 run(proc_1);

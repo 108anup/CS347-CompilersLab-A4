@@ -25,6 +25,6 @@ proc_1.submit_jobs(job_1);
 proc_2.submit_jobs(job_2);
 proc_3.submit_jobs(job_3);
 
-run({proc_1,proc_2,proc_3});
+run([proc_1,proc_2,proc_3]);
 
 
