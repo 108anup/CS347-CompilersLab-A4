@@ -4,5 +4,5 @@ parser: lexer.l grammar.ypp
 	g++ lex.yy.c grammar.tab.cpp -ll -ly -o parser
 
 clean:
-	rm parser grammar.tab.* lex.yy.c
+	rm parser grammar.tab.* lex.yy.c out.txt
 	rm *~
