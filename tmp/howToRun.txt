@@ -1,3 +1,0 @@
-lex lexer.l 
-gcc scanner.c lex.yy.c  -o myscanner
-./myscanner < test.c
