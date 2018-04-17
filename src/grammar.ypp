@@ -1,10 +1,6 @@
 %token CHAR ELSE FLOAT FOR IF INT RETURN VOID WHILE PTR_OP INC_OP DEC_OP AND_OP OR_OP LT GT LE_OP GE_OP EQ_OP NE_OP BOOL DO
-%token NOT AMP TILDE STAR ASSIGN PROCESSOR LINK CLUSTER JOB MEMORY JOB_ID FLOPS_REQUIRED DEADLINE
-%token AFFINITY ALGO ISA CLOCK_SPEED MEM_REQUIRED ID MEMORY_TYPE SCHEDULER
-%token NUM REAL STRING_LITERAL L1_MEMORY L2_MEMORY MEM_SIZE NAME START_POINT END_POINT BANDWIDTH
-%token CHANNEL_CAPACITY TOPOLOGY LINK_CAPACITY LINK_BANDWIDTH GET_AVAILABLE_MEMORY GET_MEMORY IS_RUNNING SUBMIT_JOBS
-%token GET_CLOCK_SPEED DISCARD_JOB RUN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
-%token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON SCHED
+%token NOT AMP TILDE STAR ASSIGN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
+%token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON
 
 %nonassoc "UIF"
 %nonassoc ELSE
@@ -45,11 +41,6 @@ type_specifier
 | INT { printf("type_specifier: INT\n"); }
 | FLOAT { printf("type_specifier: FLOAT\n"); }
 | BOOL { printf("type_specifier: BOOL\n"); }
-| PROCESSOR { printf("type_specifier: PROCESSOR\n"); }
-| LINK { printf("type_specifier: LINK\n"); }
-| CLUSTER { printf("type_specifier: CLUSTER\n"); }
-| JOB { printf("type_specifier: JOB\n"); }
-| MEMORY { printf("type_specifier: MEMORY\n"); }
 ;
 
 primary_expression
@@ -58,8 +49,6 @@ primary_expression
 | REAL { printf("primary_expression: REAL\n"); }
 | STRING_LITERAL { printf("primary_expression: STRING_LITERAL\n"); }
 | OPEN_BRACKET expression CLOSED_BRACKET { printf("primary_expression: OPEN_BRACKET expression CLOSED_BRACKET\n"); }
-| constructor { printf("primary_expression: constructor \n"); }
-| mem_func { printf("primary_expression: mem_func\n"); }
 | OPEN_SQUARE argument_expression_list CLOSED_SQUARE { printf("primary_expression: OPEN_SQUARE argument_expression_list CLOSED_SQUARE\n"); }
 ;
 
@@ -69,7 +58,6 @@ postfix_expression
 | postfix_expression OPEN_BRACKET CLOSED_BRACKET { printf("postfix_expression: postfix_expression OPEN_BRACKET CLOSED_BRACKET\n"); }
 | postfix_expression OPEN_BRACKET argument_expression_list CLOSED_BRACKET { printf("postfix_expression: postfix_expression OPEN_BRACKET argument_expression_list CLOSED_BRACKET\n"); }
 | postfix_expression DOT ID { printf("postfix_expression: postfix_expression DOT ID\n"); }
-| postfix_expression DOT mem_func { printf("postfix_expression: postfix_expression DOT mem_func\n"); }
 | postfix_expression PTR_OP ID { printf("postfix_expression: postfix_expression PTR_OP ID\n"); }
 | postfix_expression INC_OP { printf("postfix_expression: postfix_expression INC_OP\n"); }
 | postfix_expression DEC_OP { printf("postfix_expression: postfix_expression DEC_OP\n"); }
@@ -180,209 +168,6 @@ selection_statement
 expression_statement
 : SEMI { printf("expression_statement: SEMI\n"); }
 | expression SEMI { printf("expression_statement: expression SEMI\n"); }
-;
-
-assign_colon
-: ASSIGN { printf("assign_colon: ASSIGN\n"); }
-| COLON { printf("assign_colon: COLON\n"); }
-;
-
-constructor
-: PROCESSOR OPEN_BRACKET param_list_proc CLOSED_BRACKET { printf("constructor: PROCESSOR OPEN_BRACKET param_list_proc CLOSED_BRACKET\n"); }
-| MEMORY OPEN_BRACKET param_list_mem CLOSED_BRACKET { printf("constructor: MEMORY OPEN_BRACKET param_list_mem CLOSED_BRACKET\n"); }
-| JOB OPEN_BRACKET param_list_job CLOSED_BRACKET { printf("constructor: JOB OPEN_BRACKET param_list_job CLOSED_BRACKET\n"); }
-| LINK OPEN_BRACKET param_list_link CLOSED_BRACKET { printf("constructor: LINK OPEN_BRACKET param_list_link CLOSED_BRACKET\n"); }
-| CLUSTER OPEN_BRACKET param_list_cluster CLOSED_BRACKET { printf("constructor: CLUSTER OPEN_BRACKET param_list_cluster CLOSED_BRACKET\n"); }
-| SCHEDULER OPEN_BRACKET param_list_scheduler CLOSED_BRACKET { printf("constructor: SCHEDULER OPEN_BRACKET param_list_scheduler CLOSED_BRACKET\n"); }
-;
-
-param_list_job
-: job_param1 COMMA job_param2 COMMA job_param3 COMMA job_param4 COMMA job_param5 { printf("param_list_job: job_param1 COMMA job_param2 COMMA job_param3 COMMA job_param4 COMMA job_param5\n"); }
-;
-
-job_param1
-: JOB_ID assign_colon assignment_expression { printf("job_param1: JOB_ID assign_colon assignment_expression\n"); }
-| assignment_expression { printf("job_param1: assignment_expression\n"); }
-;
-
-job_param2
-: FLOPS_REQUIRED assign_colon assignment_expression { printf("job_param2: FLOPS_REQUIRED assign_colon assignment_expression\n"); }
-| assignment_expression { printf("job_param2: assignment_expression\n"); }
-;
-
-job_param3
-: DEADLINE assign_colon assignment_expression { printf("job_param3: DEADLINE assign_colon assignment_expression\n"); }
-| assignment_expression { printf("job_param3: assignment_expression\n"); }
-;
-
-job_param4
-: MEM_REQUIRED assign_colon assignment_expression { printf("job_param4: MEM_REQUIRED assign_colon assignment_expression\n"); }
-| assignment_expression { printf("job_param4: assignment_expression\n"); }
-;
-
-job_param5
-: AFFINITY assign_colon assignment_expression { printf("job_param5: AFFINITY assign_colon assignment_expression\n"); }
-| assignment_expression { printf("job_param5: assignment_expression\n"); }
-;
-
-param_list_proc
-: proc_param1 COMMA proc_param2 COMMA proc_param3 { printf("param_list_proc: proc_param1 COMMA proc_param2 COMMA proc_param3\n"); }
-;
-
-proc_param1
-: ISA assign_colon assignment_expression { printf("proc_param1: ISA assign_colon assignment_expression\n"); }
-| assignment_expression { printf("proc_param1: assignment_expression\n"); }
-;
-
-proc_param2
-: CLOCK_SPEED assign_colon assignment_expression { printf("proc_param2: CLOCK_SPEED assign_colon assignment_expression\n"); }
-| assignment_expression { printf("proc_param2: assignment_expression\n"); }
-;
-
-proc_param3
-: L1_MEMORY assign_colon assignment_expression {printf("proc_param3: L1_MEMORY assign_colon assignment_expression\n"); }
-| assignment_expression {printf("proc_param3: assignment_expression\n"); }
-| L1_MEMORY assign_colon assignment_expression COMMA opt_proc_param4 {printf("proc_param3: L1_MEMORY assign_colon assignment_expression COMMA opt_proc_param4\n"); }
-| assignment_expression COMMA opt_proc_param4 {printf("proc_param3: assignment_expression COMMA opt_proc_param4\n"); }
-;
-
-opt_proc_param4
-: L2_MEMORY assign_colon assignment_expression {printf("opt_proc_param4: L2_MEMORY assign_colon assignment_expression\n"); }
-| L2_MEMORY assign_colon assignment_expression COMMA opt_proc_param5 { printf("opt_proc_param4: L2_MEMORY assign_colon assignment_expression COMMA opt_proc_param5 \n"); }
-| assignment_expression { printf("opt_proc_param4: assignment_expression\n"); }
-| assignment_expression COMMA opt_proc_param5 { printf("opt_proc_param4: assignment_expression COMMA opt_proc_param5\n"); }
-| SCHED assign_colon assignment_expression { printf("opt_proc_param5: SCHED assign_colon assignment_expression\n"); }
-| SCHED assign_colon assignment_expression COMMA opt_proc_param6 { printf("opt_proc_param5: SCHED assign_colon assignment_expression COMMA opt_proc_param6\n"); }
-| NAME assign_colon assignment_expression { printf("opt_proc_param6: NAME assign_colon assignment_expression\n"); }
-;
-
-opt_proc_param5
-: SCHED assign_colon assignment_expression { printf("opt_proc_param5: SCHED assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_proc_param5: assignment_expression\n"); }
-| SCHED assign_colon assignment_expression COMMA opt_proc_param6 { printf("opt_proc_param5: SCHED assign_colon assignment_expression COMMA opt_proc_param6\n"); }
-| assignment_expression COMMA opt_proc_param6 { printf("opt_proc_param5: assignment_expression COMMA opt_proc_param6\n"); }
-| NAME assign_colon assignment_expression { printf("opt_proc_param6: NAME assign_colon assignment_expression\n"); }
-;
-
-opt_proc_param6
-: NAME assign_colon assignment_expression { printf("opt_proc_param6: NAME assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_proc_param6: assignment_expression\n"); }
-;
-
-param_list_mem
-: mem_param1 COMMA mem_param2 { printf("param_list_mem: mem_param1 COMMA mem_param2\n"); }
-;
-
-mem_param1
-: MEMORY_TYPE assign_colon assignment_expression { printf("mem_param1: MEMORY_TYPE assign_colon assignment_expression\n"); }
-| assignment_expression { printf("mem_param1: assignment_expression\n"); }
-;
-
-mem_param2
-: MEM_SIZE assign_colon assignment_expression { printf("mem_param2: MEM_SIZE assign_colon assignment_expression\n"); }
-| assignment_expression { printf("mem_param2: assignment_expression\n"); }
-| MEM_SIZE assign_colon assignment_expression COMMA opt_mem_param3 { printf("mem_param2: MEM_SIZE assign_colon assignment_expression COMMA opt_mem_param3\n"); }
-| assignment_expression COMMA opt_mem_param3 { printf("mem_param2: assignment_expression COMMA opt_mem_param3\n"); }
-;
-
-opt_mem_param3
-: NAME assign_colon assignment_expression { printf("opt_mem_param3: NAME assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_mem_param3: assignment_expression\n"); }
-;
-        
-param_list_link
-: link_param1 COMMA link_param2 COMMA link_param3 COMMA link_param4 { printf("param_list_link: link_param1 COMMA link_param2 COMMA link_param3 COMMA link_param4\n"); }
-;
-
-link_param1
-: START_POINT assign_colon assignment_expression { printf("link_param1: START_POINT assign_colon assignment_expression\n"); }
-| assignment_expression { printf("link_param1: assignment_expression\n"); }
-;
-
-link_param2
-: END_POINT assign_colon assignment_expression { printf("link_param2: END_POINT assign_colon assignment_expression\n"); }
-| assignment_expression { printf("link_param2: assignment_expression\n"); }
-;
-
-link_param3
-: BANDWIDTH assign_colon assignment_expression { printf("link_param3: BANDWIDTH assign_colon assignment_expression\n"); }
-| assignment_expression { printf("link_param3: assignment_expression\n"); }
-;
-
-link_param4
-: CHANNEL_CAPACITY assign_colon assignment_expression { printf("link_param4: CHANNEL_CAPACITY assign_colon assignment_expression\n"); }
-| assignment_expression { printf("link_param4: assignment_expression\n"); }
-| CHANNEL_CAPACITY assign_colon assignment_expression COMMA opt_link_param5 { printf("link_param4: CHANNEL_CAPACITY assign_colon assignment_expression COMMA opt_link_param5\n"); }
-| assignment_expression COMMA opt_link_param5 { printf("link_param4: assignment_expression COMMA opt_link_param5\n"); }
-;
-
-opt_link_param5
-: NAME assign_colon assignment_expression { printf("opt_link_param5: NAME assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_link_param5: assignment_expression\n"); }
-;
-
-param_list_cluster 
-: cluster_param1 COMMA cluster_param2 COMMA cluster_param3 COMMA cluster_param4 { printf("param_list_cluster: cluster_param1 COMMA cluster_param2 COMMA cluster_param3 COMMA cluster_param4\n"); }
-;
-
-cluster_param1
-: assignment_expression { printf("cluster_param1: assignment_expression\n"); }
-; 
-
-cluster_param2
-: TOPOLOGY assign_colon assignment_expression { printf("cluster_param2: TOPOLOGY assign_colon assignment_expression\n"); }
-| assignment_expression { printf("cluster_param2: assignment_expression\n"); }
-;
-
-cluster_param3
-: LINK_BANDWIDTH assign_colon assignment_expression { printf("cluster_param3: LINK_BANDWIDTH assign_colon assignment_expression\n"); }
-| assignment_expression { printf("cluster_param3: assignment_expression\n"); }
-;
-
-cluster_param4
-: LINK_CAPACITY assign_colon assignment_expression { printf("cluster_param4: LINK_CAPACITY assign_colon assignment_expression\n"); }
-| assignment_expression { printf("cluster_param4: assignment_expression\n"); }
-| LINK_CAPACITY assign_colon assignment_expression COMMA opt_cluster_param5 { printf("cluster_param4: LINK_CAPACITY assign_colon assignment_expression COMMA opt_cluster_param5\n"); }
-| assignment_expression COMMA opt_cluster_param5 { printf("cluster_param4: assignment_expression COMMA opt_cluster_param5\n"); }
-;
-
-opt_cluster_param5
-: SCHED assign_colon assignment_expression { printf("opt_cluster_param5: SCHED assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_cluster_param5: assignment_expression\n"); }
-| SCHED assign_colon assignment_expression COMMA opt_cluster_param6 { printf("opt_cluster_param5: SCHED assign_colon assignment_expression COMMA opt_cluster_param6\n"); }
-| assignment_expression COMMA opt_cluster_param6 { printf("opt_cluster_param5: assignment_expression COMMA opt_cluster_param6\n"); }
-| NAME assign_colon assignment_expression { printf("opt_cluster_param6: NAME assign_colon assignment_expression\n"); }
-;
-
-opt_cluster_param6
-: NAME assign_colon assignment_expression { printf("opt_cluster_param6: NAME assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_cluster_param6: assignment_expression\n"); }
-;
-
-param_list_scheduler
-: schedule_param1 { printf("param_list_scheduler: schedule_param1 opt_schedule_param2\n"); }
-;
-
-schedule_param1
-: ALGO assign_colon assignment_expression { printf("schedule_param1: ALGO assign_colon assignment_expression\n"); }
-| assignment_expression { printf("schedule_param1: assignment_expression \n"); }
-| ALGO assign_colon assignment_expression COMMA opt_schedule_param2 { printf("schedule_param1: ALGO assign_colon assignment_expression COMMA\n"); }
-| assignment_expression COMMA opt_schedule_param2 { printf("schedule_param1: assignment_expression COMMA\n"); }
-;
-
-opt_schedule_param2
-: NAME assign_colon assignment_expression { printf("opt_schedule_param2: NAME assign_colon assignment_expression\n"); }
-| assignment_expression { printf("opt_schedule_param2: assignment_expression"); }
-;
-
-mem_func
-: GET_AVAILABLE_MEMORY OPEN_BRACKET CLOSED_BRACKET { printf("mem_func: GET_AVAILABLE_MEMORY OPEN_BRACKET CLOSED_BRACKET\n"); }
-| GET_MEMORY OPEN_BRACKET CLOSED_BRACKET { printf("mem_func: GET_MEMORY OPEN_BRACKET CLOSED_BRACKET\n"); }
-| IS_RUNNING OPEN_BRACKET CLOSED_BRACKET {printf("mem_func: IS_RUNNING OPEN_BRACKET CLOSED_BRACKET\n"); }
-| SUBMIT_JOBS OPEN_BRACKET assignment_expression CLOSED_BRACKET {printf("mem_func: SUBMIT_JOBS OPEN_BRACKET assignment_expression\n"); }
-| GET_CLOCK_SPEED OPEN_BRACKET CLOSED_BRACKET { printf("mem_func: GET_CLOCK_SPEED OPEN_BRACKET CLOSED_BRACKET\n"); }
-| RUN OPEN_BRACKET assignment_expression CLOSED_BRACKET { printf("mem_func: RUN OPEN_BRACKET assignment_expression CLOSED_BRACKET\n"); }
-| DISCARD_JOB OPEN_BRACKET assignment_expression CLOSED_BRACKET { printf("mem_func: DISCARD_JOB OPEN_BRACKET assignment_expression CLOSED_BRACKET\n"); }
 ;
 
 %%

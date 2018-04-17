@@ -7,39 +7,6 @@ WS                              [ \t\n\v\f]
 %}
 
 %% 
-Processor                       { return(PROCESSOR); }
-Link                            { return(LINK); }
-Cluster                         { return(CLUSTER); }
-Job                             { return(JOB); }
-Memory                          { return(MEMORY); }
-Scheduler                       { return(SCHEDULER); }
-sched                           { return(SCHED); }
-job_id                          { return(JOB_ID); }
-flops_required                  { return(FLOPS_REQUIRED); }
-deadline                        { return(DEADLINE); }
-affinity                        { return(AFFINITY); }
-algo                            { return(ALGO); }
-isa                             { return(ISA); }
-clock_speed                     { return(CLOCK_SPEED); }        
-mem_required                    { return(MEM_REQUIRED); }
-l1_memory                       { return(L1_MEMORY); } 
-l2_memory                       { return(L2_MEMORY); }
-memory_size                     { return(MEM_SIZE); }
-name                            { return(NAME); }
-start_point                     { return(START_POINT); }
-end_point                       { return(END_POINT); }
-bandwidth                       { return(BANDWIDTH); }
-channel_capacity                { return(CHANNEL_CAPACITY); }
-topology                        { return(TOPOLOGY); }
-link_capacity                   { return(LINK_CAPACITY); }
-link_bandwidth                  { return(LINK_BANDWIDTH); }
-get_available_memory            { return(GET_AVAILABLE_MEMORY); }
-get_memory                      { return(GET_MEMORY); }
-is_running                      { return(IS_RUNNING); }
-submit_jobs                     { return(SUBMIT_JOBS); }
-get_clock_speed                 { return(GET_CLOCK_SPEED); }
-discard_job                     { return(DISCARD_JOB); }
-run                             { return(RUN); }
 char                            { return(CHAR); }
 else                            { return(ELSE); }
 float                           { return(FLOAT); }
