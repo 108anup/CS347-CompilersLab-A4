@@ -19,7 +19,24 @@
 %}
 
 %union{
-	int intConst_t;
+  char *name;
+  enum Type type;
+  
+  Declaration *decl;
+  FuncDecl *funcDecl;
+  Identifier *varDecl;
+  vector<IntConst *> *dimList;
+
+  StatementBlock *stmtBlock;
+  vector<Statement *> *stmtList;
+  map<string, Identifier *> *varDecls;
+  
+  Statement *stmt;
+	ExprStatement *exprStmt;
+	SelStatement *selStmt;
+	IterStatement *iterStmt;
+
+  int intConst_t;
 	bool boolConst_t;
 	char *stringConst_t;
 	double doubleConst_t;
@@ -28,23 +45,6 @@
   BoolConst *boolConst;
   StringConst *stringConst;
   DoubleConst *doubleConst;
-
-  char *name;
-
-  enum Type type;
-
-  map<string, Identifier *> *varDecls;
-  
-  Declaration *decl;
-  FuncDecl *funcDecl;
-  Identifier *varDecl;
-  
-  Identifier *id;
-  vector<IntConst *> *dimList;
-
-  vector<Statement *> *stmtList;
-  Statement *stmt;
-  StatementBlock *stmtBlock;
 }
 
 %token ELSE FOR IF RETURN WHILE PTR_OP INC_OP DEC_OP AND_OP OR_OP LT GT LE_OP GE_OP EQ_OP NE_OP DO
@@ -60,6 +60,17 @@
 %nonassoc "UIF"
 %nonassoc ELSE
 
+%left OR_OP
+%left AND_OP
+%left EQ_OP NE_OP
+%left GT
+%left LT
+%left PLUS MINUS
+%left STAR DIVIDE
+%right NOT
+%right UPLUS UMINUS
+%right INC_OP DEC_OP
+
 %type <decl> declaration
 %type <varDecl> variable_declaration
 %type <type> type_specifier
@@ -71,6 +82,9 @@
 %type <stmtBlock> statement_block
 %type <stmtList> statement_list
 %type <stmt> statement
+%type <exprStmt> expression_statement
+%type <selStmt> selection_statement
+%type <iterStmt> iteration_statement
 
 %%
 
@@ -129,10 +143,10 @@ statement_list
 ;
     
 statement
-: expression_statement { printf("statement: expression_statement\n\n\n"); }
-| selection_statement { printf("statement: selection_statement\n\n\n"); }
-| iteration_statement { printf("statement: iteration_statement\n\n\n"); }
-| statement_block { printf("statement: OPEN_CURLY statement_list CLOSED_CURLY\n\n\n"); }
+: expression_statement {$$ = (Statement *) $1;}
+| selection_statement {$$ = (Statement *) $1;}
+| iteration_statement {$$ = (Statement *) $1;}
+| statement_block {$$ = (Statement *) $1;}
 ;
 
 primary_expression
@@ -140,97 +154,49 @@ primary_expression
 | NUM { printf("primary_expression: NUM\n"); }
 | REAL { printf("primary_expression: REAL\n"); }
 | STRING_LITERAL { printf("primary_expression: STRING_LITERAL\n"); }
-| OPEN_BRACKET expression CLOSED_BRACKET { printf("primary_expression: OPEN_BRACKET expression CLOSED_BRACKET\n"); }
-| OPEN_SQUARE argument_expression_list CLOSED_SQUARE { printf("primary_expression: OPEN_SQUARE argument_expression_list CLOSED_SQUARE\n"); }
-;
-
-postfix_expression
-: primary_expression { printf("postfix_expression: primary_expression\n"); }
-| postfix_expression OPEN_SQUARE expression CLOSED_SQUARE { printf("postfix_expression: postfix_expression OPEN_SQUARE expression CLOSED_SQUARE\n"); }
-| postfix_expression OPEN_BRACKET CLOSED_BRACKET { printf("postfix_expression: postfix_expression OPEN_BRACKET CLOSED_BRACKET\n"); }
-| postfix_expression OPEN_BRACKET argument_expression_list CLOSED_BRACKET { printf("postfix_expression: postfix_expression OPEN_BRACKET argument_expression_list CLOSED_BRACKET\n"); }
-| postfix_expression DOT ID { printf("postfix_expression: postfix_expression DOT ID\n"); }
-| postfix_expression PTR_OP ID { printf("postfix_expression: postfix_expression PTR_OP ID\n"); }
-| postfix_expression INC_OP { printf("postfix_expression: postfix_expression INC_OP\n"); }
-| postfix_expression DEC_OP { printf("postfix_expression: postfix_expression DEC_OP\n"); }
-;
-
-argument_expression_list
-: assignment_expression  { printf("argument_expression_list: assignment_expression\n"); }
-| argument_expression_list COMMA assignment_expression { printf("argument_expression_list: argument_expression_list COMMA assignment_expression\n"); }
+| OPEN_BRACKET assignment_expression CLOSED_BRACKET { printf("primary_expression: OPEN_BRACKET expression CLOSED_BRACKET\n"); }
+// TODO:: Add Function Call
+// TODO:: Add array access
 ;
 
 unary_expression
-: postfix_expression { printf("unary_expression: postfix_expression\n"); }
-| INC_OP unary_expression { printf("unary_expression: INC_OP unary_expression\n"); }
-| DEC_OP unary_expression { printf("unary_expression: DEC_OP unary_expression\n"); }
+: primary_expression { printf("unary_expression: postfix_expression\n"); }
 | unary_operator unary_expression { printf("unary_expression: unary_operator unary_expression\n"); }
 ;
 
 unary_operator
-: AMP { printf("unary_operator: AMP\n"); }
-| STAR { printf("unary_operator: STAR\n"); }
-| PLUS { printf("unary_operator: PLUS\n"); }
-| MINUS { printf("unary_operator: MINUS\n"); }
-| TILDE { printf("unary_operator: TILDE\n"); }
+: PLUS %prec UPLUS { printf("unary_operator: PLUS\n"); }
+| MINUS %prec UMINUS { printf("unary_operator: MINUS\n"); }
 | NOT { printf("unary_operator: NOT\n"); }
+| DEC_OP
+| INC_OP
 ;
 
-multiplicative_expression
+binary_arith_expression
 : unary_expression { printf("multiplicative_expression: unary_expression\n"); }
-| multiplicative_expression STAR unary_expression { printf("multiplicative_expression: multiplicative_expression STAR unary_expression\n"); }
-| multiplicative_expression DIVIDE unary_expression { printf("multiplicative_expression: multiplicative_expression DIVIDE unary_expression\n"); }
-| multiplicative_expression MODULUS unary_expression { printf("multiplicative_expression: multiplicative_expression MODULUS unary_expression\n"); }
+| binary_arith_expression binary_operator unary_expression { printf("multiplicative_expression: multiplicative_expression STAR unary_expression\n"); }
 ;
 
-additive_expression
-: multiplicative_expression { printf("additive_expression: multiplicative_expression\n"); }
-| additive_expression PLUS multiplicative_expression { printf("additive_expression: additive_expression PLUS multiplicative_expression\n"); }
-| additive_expression MINUS multiplicative_expression { printf("additive_expression: additive_expression MINUS multiplicative_expression\n"); }
-;
-
-relational_expression
-: additive_expression { printf("relational_expression: additive_expression\n"); }
-| relational_expression LT additive_expression { printf("relational_expression: relational_expression LT additive_expression\n"); }
-| relational_expression GT additive_expression { printf("relational_expression: relational_expression GT additive_expression\n"); }
-| relational_expression LE_OP additive_expression { printf("relational_expression: relational_expression LE_OP additive_expression\n"); }
-| relational_expression GE_OP additive_expression { printf("relational_expression: relational_expression GE_OP additive_expression\n"); }
-;
-
-equality_expression
-: relational_expression { printf("equality_expression: relational_expression\n"); }
-| equality_expression EQ_OP relational_expression { printf("equality_expression: equality_expression EQ_OP relational_expression\n"); }
-| equality_expression NE_OP relational_expression { printf("equality_expression: equality_expression EQ_OP relational_expression\n"); }
-;
-
-and_expression 
-: equality_expression { printf("and_expression: equality_expression\n"); }
-| and_expression AMP equality_expression { printf("and_expression: and_expression AMP equality_expression\n"); }
-;
-
-exclusive_or_expression
-: and_expression { printf("exclusive_or_expression: and_expression\n"); }
-| exclusive_or_expression XOR and_expression { printf("exclusive_or_expression: exclusive_or_expression XOR and_expression\n"); }
-;
-
-inclusive_or_expression
-: exclusive_or_expression { printf("inclusive_or_expression: exclusive_or_expression\n"); }
-| inclusive_or_expression PIPE exclusive_or_expression { printf("inclusive_or_expression: inclusive_or_expression PIPE exclusive_or_expression\n"); }
-;
-
-logical_and_expression
-: inclusive_or_expression { printf("logical_and_expression: inclusive_or_expression\n"); }
-| logical_and_expression AND_OP inclusive_or_expression { printf("logical_and_expression: logical_and_expression AND_OP inclusive_or_expression\n"); }
-;
-
-logical_or_expression
-: logical_and_expression { printf("logical_or_expression: logical_and_expression\n"); }
-| logical_or_expression OR_OP logical_and_expression { printf("logical_or_expression: logical_or_expression OR_OP logical_and_expression\n"); }
+binary_operator
+: PLUS
+| MINUS
+| STAR
+| DIVIDE
+// TODO:: Add modulus
 ;
 
 conditional_expression
-: logical_or_expression { printf("conditional_expression: logical_or_expression\n"); }
-| logical_or_expression QUES expression COLON conditional_expression { printf("conditional_expression: logical_or_expression QUES expression COLON conditional_expressionn"); }
+: binary_arith_expression { printf("relational_expression: additive_expression\n"); }
+| conditional_expression conditional_operator binary_arith_expression { printf("conditional_expression: conditional_expression LT additive_expression\n"); }
+;
+
+conditional_operator
+: LT
+| GT
+| AND_OP
+| OR_OP
+| EQ_OP
+| NE_OP
 ;
 
 assignment_expression
@@ -238,28 +204,19 @@ assignment_expression
 | unary_expression ASSIGN assignment_expression { printf("assignment_expression: unary_expression ASSIGN assignment_expression\n\n"); }
 ;
 
-expression
-: assignment_expression { printf("expression: assignement_expression\n"); }
-| expression COMMA assignment_expression { printf("expression: expression COMMA assignment_expression\n"); }
-;
-
 iteration_statement
-: WHILE OPEN_BRACKET expression CLOSED_BRACKET statement { printf("iteration_statement: WHILE OPEN_BRACKET expression CLOSED_BRACKET statement\n"); }
-| DO statement WHILE OPEN_BRACKET expression CLOSED_BRACKET SEMI { printf("iteration_statement: DO statement WHILE OPEN_BRACKET expression CLOSED_BRACKET SEMI\n"); }
-| FOR OPEN_BRACKET expression_statement expression_statement CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET expression_statement expression_statement CLOSED_BRACKET statement\n"); }
-| FOR OPEN_BRACKET expression_statement expression_statement expression CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET expression_statement expression_statement expression CLOSED_BRACKET statement\n"); }
-| FOR OPEN_BRACKET declaration expression_statement CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET declaration expression_statement CLOSED_BRACKET statement\n"); }
-| FOR OPEN_BRACKET declaration expression_statement expression CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET declaration expression_statement expression CLOSED_BRACKET statement\n"); }
+: WHILE OPEN_BRACKET assignment_expression CLOSED_BRACKET statement { printf("iteration_statement: WHILE OPEN_BRACKET expression CLOSED_BRACKET statement\n"); }
+| FOR OPEN_BRACKET variable_declaration expression_statement assignment_expression CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET declaration expression_statement expression CLOSED_BRACKET statement\n"); }
 ;
 
 selection_statement
-: IF OPEN_BRACKET expression CLOSED_BRACKET statement ELSE statement { printf("selection_statement: IF OPEN_BRACKET expression CLOSED_BRACKET statement ELSE statement\n"); }
-| IF OPEN_BRACKET expression CLOSED_BRACKET statement %prec "UIF" { printf("IF OPEN_BRACKET expression CLOSED_BRACKET statement\n"); }
+: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement { printf("selection_statement: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement\n"); }
+| IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement %prec "UIF" { printf("IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement\n"); }
 ;
 
 expression_statement
 : SEMI { printf("expression_statement: SEMI\n"); }
-| expression SEMI { printf("expression_statement: expression SEMI\n"); }
+| assignment_expression SEMI { printf("expression_statement: expression SEMI\n"); }
 ;
 
 %%

@@ -76,6 +76,7 @@ FuncDecl::FuncDecl(YYLTYPE loc, enum Type t, Identifier *id,
 	this->param_list = pl;
 	this->stmt_block = sb;
 
+	id->parent = this;
 	setParent(pl, this);
 	sb->parent = this;
 }

@@ -20,6 +20,7 @@ class IntConst;
 class StringConst;
 class BoolConst;
 class DoubleConst;
+class Expression;
 
 extern map<string, Declaration *> *global_sym_table;
 
@@ -108,6 +109,8 @@ public:
 	DoubleConst();
 	DoubleConst(YYLTYPE, double);
 };
+
+class Expression : public Ast{};
 
 template <typename TemplateType>
 void setParent(vector<TemplateType *> *, Ast *);
