@@ -1,11 +1,3 @@
-%token CHAR ELSE FLOAT FOR IF INT RETURN VOID WHILE PTR_OP INC_OP DEC_OP AND_OP OR_OP LT GT LE_OP GE_OP EQ_OP NE_OP BOOL DO
-%token NOT AMP TILDE STAR ASSIGN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
-%token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON
-%token ID NUM REAL STRING_LITERAL
-
-%nonassoc "UIF"
-%nonassoc ELSE
-
 %locations
 
 %code requires {
@@ -13,6 +5,10 @@
 	#include "location.h"
 	#include "lexer.h"
 	#include "ast.h"
+	#include <vector>
+  #include <map>
+
+	using namespace std;
 }
 
 %{
@@ -20,25 +16,132 @@
 
   extern int yylex();
   extern int yyerror(char *);
+
+  map<string, FuncDecl *> *global_sym_table;
 %}
 
 %union{
-	int int_const;
-  bool bool_const;
-  char *string_const;
-  double double_const;
-  char id[MAX_ID_LEN+1];
+	int intConst_t;
+	bool boolConst_t;
+	char *stringConst_t;
+	double doubleConst_t;
+
+	IntConst *intConst;
+  BoolConst *boolConst;
+  StringConst *stringConst;
+  DoubleConst *doubleConst;
+
+  char *name;
+
+  enum Type type;
+
+  vector<Declaration *> *vDecl;
+  map<string, VarDecl *> *varDecls;
+  
+  Declaration *decl;
+  FuncDecl *funcDecl;
+  VarDecl *varDecl;
+  
+  Identifier *id;
+  vector<IntConst *> *dimList;
+  map<string, Identifier *> *varList;
+
+  vector<Statement *> *stmtList;
+  Statement *stmt;
+  StatementBlock *stmtBlock;
 }
 
-%type <StatementList> statement_list
-%type <Statement> statement
-%type <Declaration> declaration
+%token ELSE FOR IF RETURN WHILE PTR_OP INC_OP DEC_OP AND_OP OR_OP LT GT LE_OP GE_OP EQ_OP NE_OP DO
+%token NOT AMP TILDE STAR ASSIGN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
+%token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON
+%token <name> ID
+%token <type> BOOL CHAR INT FLOAT VOID
+%token <intConst_t> NUM
+%token <doubleConst_t> REAL
+%token <stringConst_t> STRING_LITERAL
+%token <boolConst_t> BOOLEAN
+
+%nonassoc "UIF"
+%nonassoc ELSE
+
+
+%type <vDecl> declaration_list
+%type <decl> declaration
+%type <varDecl> variable_declaration
+%type <type> type_specifier
+%type <varList> variable_list
+%type <dimList> bracket_list
+
+%type <funcDecl> function_declaration
+%type <varList> parameter_list
+%type <varDecls> variable_declarations
+%type <stmtBlock> statement_block
+%type <stmtList> statement_list
+%type <stmt> statement
+
+%type <id> variable 
 
 %%
 
 declaration_list
-: declaration_list declaration { printf("declaration_list: declaration_list declaration\n\n\n"); }
-| declaration
+: declaration_list declaration {($$ = $1)->push_back($2);}
+| declaration {($$ = (new vector<Declaration *>))->push_back($1);}
+;
+
+declaration
+: variable_declaration {$$ = (Declaration *) $1;}
+| function_declaration {$$ = (Declaration *) $1;}
+;
+
+variable_declaration
+: type_specifier variable_list SEMI{$$ = new VarDecl($1, $2);}
+;
+
+variable_list
+: variable COMMA variable_list {($$ = $3); (*$$)[$1->name] = $1;}
+| variable SEMI {($$ = new map<string, Identifier *>); (*$$)[$1->name] = $1;}
+;
+
+variable
+: ID {($$ = new Identifier(@1, $1));}
+| ID bracket_list {($$ = new Identifier(@1, $1, $2));}
+;
+
+bracket_list
+: bracket_list OPEN_SQUARE NUM CLOSED_SQUARE {($$ = $1)->push_back(new IntConst(@3, $3));}
+| OPEN_SQUARE NUM CLOSED_SQUARE {($$ = new vector<IntConst *>)->push_back(new IntConst(@2, $2));}
+;
+
+function_declaration
+: type_specifier ID OPEN_BRACKET parameter_list CLOSED_BRACKET statement_block {
+	$$ = new FuncDecl($1, new Identifier(@2, $2), $4, $6);
+}
+;
+
+statement_block
+: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY {
+	$$ = new StatementBlock($2, $3);
+}
+;
+
+variable_declarations
+: variable_declarations variable_declaration {($$ = $1)->push_back($2);}
+| variable_declaration {($$ = new map<string, VarDecl *>); *($$)[]->push_back($1);}
+| /* EPSILON */
+;
+
+parameter_list 
+: parameter_list COMMA type_specifier ID {($$ = $1); (*$$)[new string($4)] = (new Identifier(@4, $3, $4));}
+| type_specifier ID {($$ = new map<string, Identifier *>); (*$$)[new string($2)] = (new Identifier(@2, $1, $2));}
+| /* EPSILON */ {$$ = NULL}
+;
+
+type_specifier
+: VOID
+| CHAR
+| INT
+| FLOAT
+| BOOL
 ;
 
 statement_list
@@ -50,26 +153,7 @@ statement
 : expression_statement { printf("statement: expression_statement\n\n\n"); }
 | selection_statement { printf("statement: selection_statement\n\n\n"); }
 | iteration_statement { printf("statement: iteration_statement\n\n\n"); }
-| OPEN_CURLY statement_list CLOSED_CURLY { printf("statement: OPEN_CURLY statement_list CLOSED_CURLY\n\n\n"); }
-| declaration { printf("statement: declaration\n\n\n"); }
-;
-
-declaration
-: type_specifier declarator SEMI { printf("declaration: type_specifier declarator ASSIGN assignment_expression SEMI\n"); }
-;
-
-declarator
-: ID  { printf("declarator: ID\n"); }
-| declarator OPEN_SQUARE assignment_expression CLOSED_SQUARE { printf("declarator: declarator OPEN_SQUARE assignment_expression CLOSED_SQUARE\n"); }
-| declarator OPEN_SQUARE CLOSED_SQUARE  { printf("declarator: declarator OPEN_SQUARE CLOSED_SQUARE\n"); }
-;
-
-type_specifier
-: VOID { printf("type_specifier: VOID\n"); }
-| CHAR { printf("type_specifier: CHAR\n"); }
-| INT { printf("type_specifier: INT\n"); }
-| FLOAT { printf("type_specifier: FLOAT\n"); }
-| BOOL { printf("type_specifier: BOOL\n"); }
+| statement_block { printf("statement: OPEN_CURLY statement_list CLOSED_CURLY\n\n\n"); }
 ;
 
 primary_expression
@@ -211,6 +295,7 @@ int yyerror(char *s){
 
 int main(){
 	InitScanner();
+  global_sym_table = new map<string, FuncDecl *>;
   //yydebug = 1;
   return yyparse();
 }

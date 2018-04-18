@@ -48,17 +48,17 @@ static void DoBeforeEachAction();
 {SINGLE_COMMENT}       { /* skip to end of line for // comment */ }
 
  /* -------------------- Tokens ------------------------------- */
-char                            { return(CHAR); }
+char                            { yylval.type = T_CHAR; return(CHAR); }
 else                            { return(ELSE); }
-float                           { return(FLOAT); }
+float                           { yylval.type = T_FLOAT; return(FLOAT); }
 for                             { return(FOR); }
 if                              { return(IF); }
-int                             { return(INT); }
+int                             { yylval.type = T_INT; return(INT); }
 return                          { return(RETURN); }
-void                            { return(VOID); }
+void                            { yylval.type = T_VOID; return(VOID); }
 while                           { return(WHILE); }
 do                              { return(DO); }
-bool                            { return(BOOL); }
+bool                            { yylval.type = T_BOOL; return(BOOL); }
 "->"                            { return(PTR_OP); }
 "&"                             { return(AMP); }
 "~"                             { return(TILDE); }
@@ -84,17 +84,19 @@ bool                            { return(BOOL); }
 ")"                             { return(CLOSED_BRACKET); }
 "{"                             { return(OPEN_CURLY); }
 "}"                             { return(CLOSED_CURLY); }
-L?\"(\\.|[^\\"])*\"             { yylval.string_const = strdup(yytext); return(STRING_LITERAL); }
-L?\'(\\.|[^\\'])*\'             { yylval.string_const = strdup(yytext); return(STRING_LITERAL); }
+L?\"(\\.|[^\\"])*\"             { yylval.stringConst_t = strdup(yytext); return(STRING_LITERAL); }
+L?\'(\\.|[^\\'])*\'             { yylval.stringConst_t = strdup(yytext); return(STRING_LITERAL); }
 "]"                             { return(CLOSED_SQUARE); }
 "["                             { return(OPEN_SQUARE); }
-[0-9]*"."[0-9]+                 { yylval.double_const = atof(yytext); return(REAL); } 
-[0-9]+                          { yylval.int_const = atoi(yytext); return(NUM);}
+[0-9]*"."[0-9]+                 { yylval.doubleConst_t = atof(yytext); return(REAL); } 
+[0-9]+                          { yylval.intConst_t = atoi(yytext); return(NUM);}
+true                            { yylval.boolConst_t = true; return(BOOLEAN);}
+false                           { yylval.boolConst_t = false; return(BOOLEAN);}
 {L}({L}|{D})*                   { 	
 									if(yyleng > MAX_ID_LEN){
 										OutputError(&yylloc, "Identifier too Long");
 									}
-									strcpy(yylval.id, yytext);
+									yylval.name = strdup(yytext);
 									return(ID); }
 ";"                             { return(SEMI);}
 ","                             { return(COMMA); }
