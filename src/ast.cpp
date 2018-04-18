@@ -46,19 +46,19 @@ Identifier::Identifier(YYLTYPE loc, enum Type t, char *name) : Declaration(loc){
 	this->is_array = false;
 }
 
-IntConst::IntConst(YYLTYPE loc, int val) : Ast(loc){
+IntConst::IntConst(YYLTYPE loc, int val) : Expression(loc){
 	this->val = val;
 }
 
-StringConst::StringConst(YYLTYPE loc, string val) : Ast(loc){
+StringConst::StringConst(YYLTYPE loc, string val) : Expression(loc){
 	this->val = val;
 }
 
-BoolConst::BoolConst(YYLTYPE loc, bool val) : Ast(loc){
+BoolConst::BoolConst(YYLTYPE loc, bool val) : Expression(loc){
 	this->val = val;
 }
 
-DoubleConst::DoubleConst(YYLTYPE loc, double val) : Ast(loc){
+DoubleConst::DoubleConst(YYLTYPE loc, double val) : Expression(loc){
 	this->val = val;
 }
 
@@ -79,4 +79,72 @@ FuncDecl::FuncDecl(YYLTYPE loc, enum Type t, Identifier *id,
 	id->parent = this;
 	setParent(pl, this);
 	sb->parent = this;
+}
+
+Access::Access(YYLTYPE loc, string name) : Expression(loc){
+	this->name = name;
+}
+
+OpExpression::OpExpression(Operator *op, Expression *lhs, Expression *rhs){
+	this->op = op;
+	this->lhs = lhs;
+	this->rhs = rhs;
+
+	op->parent = this; 
+	lhs->parent = this; 
+	rhs->parent = this; 
+}
+
+OpExpression::OpExpression(Operator *op, Expression *rhs){
+	this->op = op;
+	this->lhs = NULL;
+	this->rhs = rhs;
+
+	op->parent = this; 
+	rhs->parent = this; 
+}
+
+Operator::Operator(YYLTYPE loc, int op) : Ast(loc){
+	this->op = op;
+}
+
+SelStatement::SelStatement(Expression *e, Statement *s1, Statement *s2){
+	this->test = e;
+	this->body_true = s1;
+	this->body_false = s2;
+
+	e->parent = this;
+	s1->parent = this;
+	s2->parent = this;
+}
+
+SelStatement::SelStatement(Expression *e, Statement *s1){
+	this->test = e;
+	this->body_true = s1;
+	this->body_false = NULL;
+
+	e->parent = this;
+	s1->parent = this;
+}
+
+IterStatement::IterStatement(Expression *e, Statement *s){
+	this->loop_type = WHILE;
+	this->expr = e;
+	this->body = s;
+
+	s->parent = this;
+	e->parent = this;
+}
+
+IterStatement::IterStatement(ExprStatement *i, ExprStatement *c, Expression *e, Statement *s){
+	this->loop_type = FOR;
+	this->init = i;
+	this->cond = c;
+	this->expr = e;
+	this->body = s;
+
+	s->parent = this;
+	i->parent = this;
+	c->parent = this;
+	e->parent = this;
 }

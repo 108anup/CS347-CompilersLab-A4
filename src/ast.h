@@ -13,18 +13,30 @@ class Ast;
 class Declaration;
 class Identifier;
 class FuncDecl;
+
 class Statement;
 class StatementBlock;
+class ExprStatement;
+class SelStatement;
+class IterStatement;
+
+class Expression;
+class OpExpression;
+class Operator;
+class Access;
 
 class IntConst;
 class StringConst;
 class BoolConst;
 class DoubleConst;
-class Expression;
-
-extern map<string, Declaration *> *global_sym_table;
 
 enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL};
+
+#ifndef YYBISON
+#include "grammar.tab.hpp"          
+#endif
+
+extern map<string, Declaration *> *global_sym_table;
 
 class Ast{
 public:
@@ -67,13 +79,35 @@ public:
 
 class Statement : public Ast{};
 
-class ExprStatement : public Statement{};
+class ExprStatement : public Statement{
+public:
+	Expression *expr;
+};
 
-class SelStatement : public Statement{};
+class SelStatement : public Statement{
+public:
+	Expression *test;
+	Statement *body_true;
+	Statement *body_false;
 
-class IterStatement : public Statement{};
+	SelStatement (Expression *, Statement*, Statement*);
+	SelStatement (Expression *, Statement *);
+};
 
-class StatementBlock : public Ast{
+class IterStatement : public Statement{
+public:
+	int loop_type;
+	ExprStatement *init;
+	ExprStatement *cond;
+	Expression *expr; // cond for WHILE, cont for FOR
+	Statement *body;
+
+	IterStatement(Expression *, Statement *);
+	IterStatement(ExprStatement *, ExprStatement *, Expression *, Statement *);
+
+};
+
+class StatementBlock : public Statement{
 public:
 	vector<Statement *> *stmt_list;
 	map<string, Identifier *> *symbol_table;
@@ -82,35 +116,64 @@ public:
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
 };
 
-class IntConst : public Ast{
+class Operator : public Ast{
+public:
+	int op;
+	Operator(YYLTYPE loc, int op);
+};
+
+class Expression : public Ast{
+public:
+	enum Type type;
+
+	Expression() {}
+	Expression(YYLTYPE loc) : Ast(loc) {}
+};
+
+class Access : public Expression{
+public:
+	string name;
+	Access(YYLTYPE, string);
+};
+
+
+class OpExpression : public Expression {
+public:
+	Operator *op;
+	Expression *lhs;
+	Expression *rhs;
+
+	OpExpression(Operator *, Expression *, Expression *);
+	OpExpression(Operator *, Expression *);
+};
+
+class IntConst : public Expression{
 public:
 	int val;
 	IntConst();
 	IntConst(YYLTYPE, int);
 };
 
-class StringConst : public Ast{
+class StringConst : public Expression{
 public:
 	string val;
 	StringConst();
 	StringConst(YYLTYPE, string);
 };
 
-class BoolConst : public Ast{
+class BoolConst : public Expression{
 public:
 	bool val;
 	BoolConst();
 	BoolConst(YYLTYPE, bool);
 };
 
-class DoubleConst : public Ast{
+class DoubleConst : public Expression{
 public:
 	double val;
 	DoubleConst();
 	DoubleConst(YYLTYPE, double);
 };
-
-class Expression : public Ast{};
 
 template <typename TemplateType>
 void setParent(vector<TemplateType *> *, Ast *);

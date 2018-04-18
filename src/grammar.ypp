@@ -36,6 +36,11 @@
 	SelStatement *selStmt;
 	IterStatement *iterStmt;
 
+	Expression *expr;
+	OpExpression *opExpr;
+	Operator *op;
+	Access *access;
+
   int intConst_t;
 	bool boolConst_t;
 	char *stringConst_t;
@@ -85,6 +90,9 @@
 %type <exprStmt> expression_statement
 %type <selStmt> selection_statement
 %type <iterStmt> iteration_statement
+
+%type <expr> primary_expression unary_expression binary_arith_expression conditional_expression assignment_expression
+%type <op> unary_operator binary_operator conditional_operator
 
 %%
 
@@ -150,73 +158,73 @@ statement
 ;
 
 primary_expression
-: ID { printf("primary_expression: ID\n"); }
-| NUM { printf("primary_expression: NUM\n"); }
-| REAL { printf("primary_expression: REAL\n"); }
-| STRING_LITERAL { printf("primary_expression: STRING_LITERAL\n"); }
-| OPEN_BRACKET assignment_expression CLOSED_BRACKET { printf("primary_expression: OPEN_BRACKET expression CLOSED_BRACKET\n"); }
+: ID { $$ = new Access(@1, *(new string($1))); }
+| NUM { $$ = new IntConst(@1, $1); }
+| REAL { $$ = new DoubleConst(@1, $1); }
+| STRING_LITERAL { $$ = new StringConst(@1, $1); }
+| OPEN_BRACKET assignment_expression CLOSED_BRACKET { $$ = $2; }
 // TODO:: Add Function Call
 // TODO:: Add array access
 ;
 
 unary_expression
-: primary_expression { printf("unary_expression: postfix_expression\n"); }
-| unary_operator unary_expression { printf("unary_expression: unary_operator unary_expression\n"); }
+: primary_expression { $$ = $1; }
+| unary_operator unary_expression { $$ = new OpExpression($1, $2); }
 ;
 
 unary_operator
-: PLUS %prec UPLUS { printf("unary_operator: PLUS\n"); }
-| MINUS %prec UMINUS { printf("unary_operator: MINUS\n"); }
-| NOT { printf("unary_operator: NOT\n"); }
-| DEC_OP
-| INC_OP
+: PLUS %prec UPLUS { $$ = new Operator(@1, PLUS); }
+| MINUS %prec UMINUS { $$ = new Operator(@1, MINUS); }
+| NOT { $$ = new Operator(@1, NOT); }
+| DEC_OP {$$ = new Operator(@1, DEC_OP); }
+| INC_OP {$$ = new Operator(@1, INC_OP);}
 ;
 
 binary_arith_expression
-: unary_expression { printf("multiplicative_expression: unary_expression\n"); }
-| binary_arith_expression binary_operator unary_expression { printf("multiplicative_expression: multiplicative_expression STAR unary_expression\n"); }
+: unary_expression { $$ = $1; }
+| binary_arith_expression binary_operator unary_expression { $$ = new OpExpression($2, $1, $3); }
 ;
 
 binary_operator
-: PLUS
-| MINUS
-| STAR
-| DIVIDE
+: PLUS {$$ = new Operator(@1, PLUS);}
+| MINUS {$$ = new Operator(@1, MINUS);}
+| STAR {$$ = new Operator(@1, STAR);}
+| DIVIDE {$$ = new Operator(@1, DIVIDE);}
 // TODO:: Add modulus
 ;
 
 conditional_expression
-: binary_arith_expression { printf("relational_expression: additive_expression\n"); }
-| conditional_expression conditional_operator binary_arith_expression { printf("conditional_expression: conditional_expression LT additive_expression\n"); }
+: binary_arith_expression { $$ = $1; }
+| conditional_expression conditional_operator binary_arith_expression { $$ = new OpExpression($2, $1, $3); }
 ;
 
 conditional_operator
-: LT
-| GT
-| AND_OP
-| OR_OP
-| EQ_OP
-| NE_OP
+: LT {$$ = new Operator(@1, LT);}
+| GT {$$ = new Operator(@1, GT);}
+| AND_OP {$$ = new Operator(@1, AND_OP);}
+| OR_OP {$$ = new Operator(@1, OR_OP);}
+| EQ_OP {$$ = new Operator(@1, EQ_OP);}
+| NE_OP {$$ = new Operator(@1, NE_OP);}
 ;
 
 assignment_expression
-: conditional_expression { printf("assignment_expression: conditional_expression\n\n"); }
-| unary_expression ASSIGN assignment_expression { printf("assignment_expression: unary_expression ASSIGN assignment_expression\n\n"); }
+: conditional_expression { $$ = $1; }
+| unary_expression ASSIGN assignment_expression { $$ = new OpExpression(new Operator(@2, ASSIGN), $1, $3); }
 ;
 
 iteration_statement
-: WHILE OPEN_BRACKET assignment_expression CLOSED_BRACKET statement { printf("iteration_statement: WHILE OPEN_BRACKET expression CLOSED_BRACKET statement\n"); }
-| FOR OPEN_BRACKET variable_declaration expression_statement assignment_expression CLOSED_BRACKET statement { printf("iteration_statement: FOR OPEN_BRACKET declaration expression_statement expression CLOSED_BRACKET statement\n"); }
+: WHILE OPEN_BRACKET assignment_expression CLOSED_BRACKET statement { $$ = new IterStatement($3, $5); }
+| FOR OPEN_BRACKET expression_statement expression_statement assignment_expression CLOSED_BRACKET statement { $$ = new IterStatement($3, $4, $5, $7); }
 ;
 
 selection_statement
-: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement { printf("selection_statement: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement\n"); }
-| IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement %prec "UIF" { printf("IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement\n"); }
+: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement { $$ = new SelStatement($3, $5, $7); }
+| IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement %prec "UIF" { $$ = new SelStatement($3, $5); }
 ;
 
 expression_statement
-: SEMI { printf("expression_statement: SEMI\n"); }
-| assignment_expression SEMI { printf("expression_statement: expression SEMI\n"); }
+: SEMI { $$ = NULL; }
+| assignment_expression SEMI { $$ = new ExprStatement; $$->expr = $1; }
 ;
 
 %%
