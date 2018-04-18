@@ -33,7 +33,6 @@
 
   enum Type type;
 
-  map<string, Declaration *> *global_sym_table;
   map<string, Identifier *> *varDecls;
   
   Declaration *decl;
@@ -61,8 +60,6 @@
 %nonassoc "UIF"
 %nonassoc ELSE
 
-
-%type <global_sym_table> declaration_list
 %type <decl> declaration
 %type <varDecl> variable_declaration
 %type <type> type_specifier
@@ -78,8 +75,8 @@
 %%
 
 declaration_list
-: declaration_list declaration {($$ = $1); (*$$)[$2->name] = $2;}
-| declaration {$$ = new map<string, Declaration *>; (*$$)[$1->name] = $1;}
+: declaration_list declaration {(*global_sym_table)[$2->name] = $2;}
+| /* EPSILON */ {global_sym_table = new map<string, Declaration *>;}
 ;
 
 declaration
@@ -104,13 +101,12 @@ function_declaration
 ;
 
 statement_block
-: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY { $$ = new StatementBlock($2, $4);}
+: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY { $$ = new StatementBlock($2, $3);}
 ;
 
 variable_declarations
 : variable_declarations variable_declaration {($$ = $1); (*$$)[$2->name] = $2;}
-| variable_declaration {$$ = new map<string, Identifier *>; (*$$)[$1->name] = $1;}
-| /* EPSILON */ {$$ = NULL;}
+| /* EPSILON */ {$$ = new map<string, Identifier *>;}
 ;
 
 parameter_list 
@@ -128,8 +124,8 @@ type_specifier
 ;
 
 statement_list
-: statement statement_list { printf("statement_list: statement statement_list\n"); }
-| /* EPSILON */ { printf("statement_list: EPSILON\n"); }
+: statement statement_list {($$ = $2)->push_back($1);}
+| /* EPSILON */ {$$ = new vector<Statement *>;}
 ;
     
 statement

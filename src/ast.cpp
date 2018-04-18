@@ -5,6 +5,8 @@
 
 using namespace std;
 
+map<string, Declaration *> *global_sym_table;
+
 template <typename TemplateType>
 void setParent(vector<TemplateType *> *node, Ast *parent){
 	for (int i = 0; i < node->size(); ++i)

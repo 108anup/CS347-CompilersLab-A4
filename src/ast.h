@@ -21,6 +21,8 @@ class StringConst;
 class BoolConst;
 class DoubleConst;
 
+extern map<string, Declaration *> *global_sym_table;
+
 enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL};
 
 class Ast{
@@ -63,6 +65,12 @@ public:
 };
 
 class Statement : public Ast{};
+
+class ExprStatement : public Statement{};
+
+class SelStatement : public Statement{};
+
+class IterStatement : public Statement{};
 
 class StatementBlock : public Ast{
 public:
