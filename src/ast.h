@@ -11,7 +11,6 @@ using namespace std;
 
 class Ast;
 class Declaration;
-class VarDecl;
 class Identifier;
 class FuncDecl;
 class Statement;
@@ -34,41 +33,33 @@ public:
 };
 
 class Declaration : public Ast{
-};
-
-class VarDecl : public Declaration{
 public:
-	enum Type elem_type;
-	map<string, Identifier *> *var_list;
-
-	VarDecl();
-	VarDecl(enum Type, map<string, Identifier *> *);
+	Declaration(YYLTYPE loc) : Ast(loc) {}
+	string name;
 };
 
-class Identifier : public Ast{
+class Identifier : public Declaration{
 public:
 	bool is_array;
 	enum Type elem_type;
 	vector<IntConst *> *dim_list;
-	string name;
 	int scope;
 
 	Identifier();
-	Identifier(YYLTYPE, char *);
-	Identifier(YYLTYPE, char *, vector<IntConst *> *);
+	Identifier(YYLTYPE, enum Type, char *, vector<IntConst *> *);
 	Identifier(YYLTYPE, enum Type, char *);
 };
 
 class FuncDecl : public Declaration{
 public:
 	enum Type return_type;
-	string name;
 
 	map<string, Identifier *> *param_list;
 	StatementBlock *stmt_block;
 
 	FuncDecl();
-	FuncDecl(enum Type, Identifier *, map<string, Identifier*> *, StatementBlock *);
+	FuncDecl(YYLTYPE, enum Type, Identifier *, 
+	map<string, Identifier*> *, StatementBlock *);
 };
 
 class Statement : public Ast{};
@@ -76,10 +67,10 @@ class Statement : public Ast{};
 class StatementBlock : public Ast{
 public:
 	vector<Statement *> *stmt_list;
-	map<string, VarDecl *> *symbol_table;
+	map<string, Identifier *> *symbol_table;
 
 	StatementBlock();
-	StatementBlock(map<string, VarDecl *> *, vector<Statement *> *);
+	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
 };
 
 class IntConst : public Ast{

@@ -31,29 +31,14 @@ Ast::Ast(){
 	this->parent = NULL;
 }
 
-VarDecl::VarDecl(enum Type t, map<string, Identifier *> *v){
-	this->elem_type = t;
-	this->var_list = v;
-
-	setParent(v, this);
-	for (typename map<string, Identifier *>::iterator i = v->begin(); i != v->end(); ++i)
-	{
-		(i->second)->elem_type = t; 
-	}
-}
-
-Identifier::Identifier(YYLTYPE loc, char *name) : Ast(loc){
-	this->name.assign(name);
-	this->is_array = false;
-}
-
-Identifier::Identifier(YYLTYPE loc, char *name, vector<IntConst *> *dimList) : Ast(loc){
+Identifier::Identifier(YYLTYPE loc, enum Type t, char *name, vector<IntConst *> *dimList) : Declaration(loc){
 	this->name.assign(name);
 	this->is_array  = true;
+	this->elem_type = t;
 	setParent(dimList, this);
 }
 
-Identifier::Identifier(YYLTYPE loc, enum Type t, char *name) : Ast(loc){
+Identifier::Identifier(YYLTYPE loc, enum Type t, char *name) : Declaration(loc){
 	this->name.assign(name);
 	this->elem_type = t;
 	this->is_array = false;
@@ -75,7 +60,7 @@ DoubleConst::DoubleConst(YYLTYPE loc, double val) : Ast(loc){
 	this->val = val;
 }
 
-StatementBlock::StatementBlock(map<string, VarDecl *> *m, vector<Statement *> *v){
+StatementBlock::StatementBlock(map<string, Identifier *> *m, vector<Statement *> *v){
 	this->stmt_list = v;
 	this->symbol_table = m;
 
@@ -83,7 +68,8 @@ StatementBlock::StatementBlock(map<string, VarDecl *> *m, vector<Statement *> *v
 	setParent(m, this);
 }
 
-FuncDecl::FuncDecl(enum Type t, Identifier *id, map<string, Identifier*> *pl, StatementBlock *sb){
+FuncDecl::FuncDecl(YYLTYPE loc, enum Type t, Identifier *id, 
+	map<string, Identifier*> *pl, StatementBlock *sb) : Declaration(loc){
 	this->return_type = id->elem_type = t; id->is_array = false;
 	this->param_list = pl;
 	this->stmt_block = sb;

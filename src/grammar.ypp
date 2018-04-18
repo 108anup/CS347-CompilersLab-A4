@@ -16,8 +16,6 @@
 
   extern int yylex();
   extern int yyerror(char *);
-
-  map<string, FuncDecl *> *global_sym_table;
 %}
 
 %union{
@@ -35,16 +33,15 @@
 
   enum Type type;
 
-  vector<Declaration *> *vDecl;
-  map<string, VarDecl *> *varDecls;
+  map<string, Declaration *> *global_sym_table;
+  map<string, Identifier *> *varDecls;
   
   Declaration *decl;
   FuncDecl *funcDecl;
-  VarDecl *varDecl;
+  Identifier *varDecl;
   
   Identifier *id;
   vector<IntConst *> *dimList;
-  map<string, Identifier *> *varList;
 
   vector<Statement *> *stmtList;
   Statement *stmt;
@@ -65,27 +62,24 @@
 %nonassoc ELSE
 
 
-%type <vDecl> declaration_list
+%type <global_sym_table> declaration_list
 %type <decl> declaration
 %type <varDecl> variable_declaration
 %type <type> type_specifier
-%type <varList> variable_list
 %type <dimList> bracket_list
 
 %type <funcDecl> function_declaration
-%type <varList> parameter_list
+%type <varDecls> parameter_list
 %type <varDecls> variable_declarations
 %type <stmtBlock> statement_block
 %type <stmtList> statement_list
 %type <stmt> statement
 
-%type <id> variable 
-
 %%
 
 declaration_list
-: declaration_list declaration {($$ = $1)->push_back($2);}
-| declaration {($$ = (new vector<Declaration *>))->push_back($1);}
+: declaration_list declaration {($$ = $1); (*$$)[$2->name] = $2;}
+| declaration {$$ = new map<string, Declaration *>; (*$$)[$1->name] = $1;}
 ;
 
 declaration
@@ -94,17 +88,8 @@ declaration
 ;
 
 variable_declaration
-: type_specifier variable_list SEMI{$$ = new VarDecl($1, $2);}
-;
-
-variable_list
-: variable COMMA variable_list {($$ = $3); (*$$)[$1->name] = $1;}
-| variable SEMI {($$ = new map<string, Identifier *>); (*$$)[$1->name] = $1;}
-;
-
-variable
-: ID {($$ = new Identifier(@1, $1));}
-| ID bracket_list {($$ = new Identifier(@1, $1, $2));}
+: type_specifier ID SEMI{($$ = new Identifier(@2, $1, $2));}
+| type_specifier ID bracket_list SEMI{($$ = new Identifier(@2, $1, $2, $3));}
 ;
 
 bracket_list
@@ -114,26 +99,24 @@ bracket_list
 
 function_declaration
 : type_specifier ID OPEN_BRACKET parameter_list CLOSED_BRACKET statement_block {
-	$$ = new FuncDecl($1, new Identifier(@2, $2), $4, $6);
+	$$ = new FuncDecl(@1, $1, new Identifier(@2, $1, $2), $4, $6);
 }
 ;
 
 statement_block
-: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY {
-	$$ = new StatementBlock($2, $3);
-}
+: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY { $$ = new StatementBlock($2, $4);}
 ;
 
 variable_declarations
-: variable_declarations variable_declaration {($$ = $1)->push_back($2);}
-| variable_declaration {($$ = new map<string, VarDecl *>); *($$)[]->push_back($1);}
-| /* EPSILON */
+: variable_declarations variable_declaration {($$ = $1); (*$$)[$2->name] = $2;}
+| variable_declaration {$$ = new map<string, Identifier *>; (*$$)[$1->name] = $1;}
+| /* EPSILON */ {$$ = NULL;}
 ;
 
 parameter_list 
-: parameter_list COMMA type_specifier ID {($$ = $1); (*$$)[new string($4)] = (new Identifier(@4, $3, $4));}
-| type_specifier ID {($$ = new map<string, Identifier *>); (*$$)[new string($2)] = (new Identifier(@2, $1, $2));}
-| /* EPSILON */ {$$ = NULL}
+: parameter_list COMMA type_specifier ID {($$ = $1); (*$$)[*(new string($4))] = (new Identifier(@4, $3, $4));}
+| type_specifier ID {($$ = new map<string, Identifier *>); (*$$)[*(new string($2))] = (new Identifier(@2, $1, $2));}
+| /* EPSILON */ {$$ = NULL;}
 ;
 
 type_specifier
@@ -295,7 +278,6 @@ int yyerror(char *s){
 
 int main(){
 	InitScanner();
-  global_sym_table = new map<string, FuncDecl *>;
   //yydebug = 1;
   return yyparse();
 }
