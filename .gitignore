@@ -2,3 +2,4 @@ src/grammar.output
 src/grammar.tab.*
 src/lex.yy.*
 src/parser
+*.o

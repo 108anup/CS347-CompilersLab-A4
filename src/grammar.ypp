@@ -1,16 +1,45 @@
 %token CHAR ELSE FLOAT FOR IF INT RETURN VOID WHILE PTR_OP INC_OP DEC_OP AND_OP OR_OP LT GT LE_OP GE_OP EQ_OP NE_OP BOOL DO
 %token NOT AMP TILDE STAR ASSIGN OPEN_BRACKET CLOSED_BRACKET OPEN_CURLY CLOSED_CURLY OPEN_SQUARE CLOSED_SQUARE
 %token SEMI COMMA DOT PLUS MINUS DIVIDE MODULUS PIPE XOR QUES COLON
+%token ID NUM REAL STRING_LITERAL
 
 %nonassoc "UIF"
 %nonassoc ELSE
 
+%locations
+
+%code requires {
+	#include "errors.h"
+	#include "location.h"
+	#include "lexer.h"
+	#include "ast.h"
+}
+
 %{
+  #include <stdio.h>
+
   extern int yylex();
   extern int yyerror(char *);
 %}
 
+%union{
+	int int_const;
+  bool bool_const;
+  char *string_const;
+  double double_const;
+  char id[MAX_ID_LEN+1];
+}
+
+%type <StatementList> statement_list
+%type <Statement> statement
+%type <Declaration> declaration
+
 %%
+
+declaration_list
+: declaration_list declaration { printf("declaration_list: declaration_list declaration\n\n\n"); }
+| declaration
+;
 
 statement_list
 : statement statement_list { printf("statement_list: statement statement_list\n"); }
@@ -26,7 +55,7 @@ statement
 ;
 
 declaration
-: type_specifier declarator ASSIGN assignment_expression SEMI { printf("declaration: type_specifier declarator ASSIGN assignment_expression SEMI\n"); }
+: type_specifier declarator SEMI { printf("declaration: type_specifier declarator ASSIGN assignment_expression SEMI\n"); }
 ;
 
 declarator
@@ -181,6 +210,7 @@ int yyerror(char *s){
 }
 
 int main(){
+	InitScanner();
   //yydebug = 1;
   return yyparse();
 }
