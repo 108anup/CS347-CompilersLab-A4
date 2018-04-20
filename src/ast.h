@@ -45,8 +45,8 @@ public:
 
 	Ast();
 	Ast(YYLTYPE loc);
-	//virtual void dummy() {}
-	//virtual ~Ast() {}
+	virtual void dummy() {}
+	virtual ~Ast() {}
 };
 
 class Declaration : public Ast{
@@ -82,14 +82,14 @@ public:
 
 class Statement : public Ast{
 public:
-	//virtual void CheckStatement() {}
+	virtual void CheckStatement() {}
 };
 
 class ExprStatement : public Statement{
 public:
 	Expression *expr;
 
-	//void CheckStatement();
+	void CheckStatement();
 };
 
 class SelStatement : public Statement{
@@ -122,7 +122,7 @@ public:
 
 	StatementBlock();
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
-	//void CheckStatements();
+	void CheckStatements();
 };
 
 class Operator : public Ast{
@@ -138,7 +138,7 @@ public:
 	Expression() {}
 	Expression(YYLTYPE loc) : Ast(loc) {}
 
-	//virtual void CheckExpression() {}
+	virtual void CheckExpression() {}
 };
 
 class Access : public Expression{
@@ -146,7 +146,7 @@ public:
 	string name;
 	Access(YYLTYPE, string);
 
-	//void CheckExpression();
+	void CheckExpression();
 };
 
 

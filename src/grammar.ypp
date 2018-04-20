@@ -132,7 +132,7 @@ function_declaration
 ;
 
 statement_block
-: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY {$$ = new StatementBlock($2, $3);}
+: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY {$$ = new StatementBlock($2, $3); $$->CheckStatements();}
 ;
 
 variable_declarations

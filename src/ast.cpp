@@ -146,7 +146,6 @@ IterStatement::IterStatement(ExprStatement *i, ExprStatement *c, Expression *e, 
 	e->parent = this;
 }
 
-/*
 void StatementBlock::CheckStatements(){
 	//stmt list is public member
 	for (int i = 0; i < stmt_list->size(); ++i)
@@ -173,8 +172,9 @@ StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
 	while(parent){
 		if(typeid(sb) == typeid(parent)){
 			sb = dynamic_cast<StatementBlock *>(parent);
+			break;
 		}
 		parent = parent->parent;
 	}
 	return sb;
-}*/
+}
