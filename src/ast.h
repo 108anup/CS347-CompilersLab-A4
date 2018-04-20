@@ -88,7 +88,7 @@ public:
 class ExprStatement : public Statement{
 public:
 	Expression *expr;
-
+	ExprStatement(Expression *);
 	void CheckStatement();
 };
 
@@ -148,7 +148,6 @@ public:
 
 	void CheckExpression();
 };
-
 
 class OpExpression : public Expression {
 public:
@@ -225,5 +224,6 @@ void CheckAndInsertIntoSymTable(map<string, TemplateType *> *m, TemplateType *d)
 
 void CheckAndInsertIntoSymTable(vector<Identifier *> *, Identifier *);
 StatementBlock* GetEnclosingStatementBlockParent(Ast *);
+FuncDecl* GetEnclosingFuncParent(Ast *);
 
 #endif

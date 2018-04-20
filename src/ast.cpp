@@ -74,8 +74,13 @@ FuncDecl::FuncDecl(YYLTYPE loc, YYLTYPE ret_loc, enum Type t, char *name,
 	this->stmt_block = sb;
 	this->name = name;
 
-	setParent(pl, this);
-	sb->parent = this;
+	setParent(this->param_list, this);
+	this->stmt_block->parent = this;
+}
+
+ExprStatement::ExprStatement(Expression *e){
+	this->expr = e;
+	e->parent = this;
 }
 
 Access::Access(YYLTYPE loc, string name) : Expression(loc){
@@ -156,21 +161,45 @@ void StatementBlock::CheckStatements(){
 
 //Override Base class function
 void ExprStatement::CheckStatement(){
+	Access *a;
+	cout<<(typeid(this) == typeid(a));
 	this->expr->CheckExpression();
 }
 
 void Access::CheckExpression(){
 	StatementBlock *sb =  GetEnclosingStatementBlockParent((Ast *) this);
+	FuncDecl *f;
 	if(sb->symbol_table->find(this->name) == sb->symbol_table->end()){
-		IdentifierNotDeclared(this->loc, this->name);
+		f = GetEnclosingFuncParent(this);
+		for (int i = 0; i < f->param_list->size(); ++i)
+		{
+			if((*f->param_list)[i]->name == this->name){
+				return;
+			}
+		}
+		if(global_sym_table->find(this->name) == global_sym_table->end())
+			IdentifierNotDeclared(this->loc, this->name);
 	}
+}
+
+FuncDecl* GetEnclosingFuncParent(Ast *a){
+	Ast *parent = a->parent;
+	FuncDecl *f = NULL;
+	while(parent){
+		if(typeid(FuncDecl) == typeid(*parent)){
+			f = dynamic_cast<FuncDecl *>(parent);
+			break;
+		}
+		parent = parent->parent;
+	}
+	return f;
 }
 
 StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
 	Ast *parent = a->parent;
 	StatementBlock *sb = NULL;
 	while(parent){
-		if(typeid(sb) == typeid(parent)){
+		if(typeid(StatementBlock) == typeid(*parent)){
 			sb = dynamic_cast<StatementBlock *>(parent);
 			break;
 		}
