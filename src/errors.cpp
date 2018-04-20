@@ -1,6 +1,5 @@
 #include "errors.h"
 #include "lexer.h"
-#include "location.h"
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
@@ -62,6 +61,18 @@ void IdentifierNotDeclared(YYLTYPE *loc, string name) {
     OutputError(loc, s.str());
 }
 
+void IncompatibleOperands(Operator *op, enum Type lhs, enum Type rhs) {
+    ostringstream s;
+    s << "Incompatible operands: " << TypeNames[lhs] << " " << TypeNames[rhs];
+    OutputError(op->loc, s.str());
+}
+
+void InvalidFuncCall(YYLTYPE *loc, string name) {
+    ostringstream s;
+    s << "Trying to call function without parenthesis: " << name;
+    OutputError(loc, s.str());
+}
+
 /*
 void ReportError::UntermString(yyltype *loc, const char *str) {
     ostringstream s;
@@ -73,12 +84,6 @@ void ReportError::UnrecogChar(yyltype *loc, char ch) {
     ostringstream s;
     s << "Unrecognized char: '" << ch << "'";
     OutputError(loc, s.str());
-}
-
-void ReportError::IncompatibleOperands(Operator *op, Type *lhs, Type *rhs) {
-    ostringstream s;
-    s << "Incompatible operands: " << lhs << " " << op << " " << rhs;
-    OutputError(op->GetLocation(), s.str());
 }
      
 void ReportError::IncompatibleOperand(Operator *op, Type *rhs) {

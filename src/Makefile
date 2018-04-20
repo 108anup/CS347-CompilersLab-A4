@@ -9,10 +9,10 @@ lex.yy.c: lexer.l
 grammar.tab.cpp: grammar.ypp
 	bison -d --debug --verbose grammar.ypp
 
-ast.o: ast.cpp ast.h
+ast.o: ast.cpp ast.h errors.h location.h grammar.ypp
 	$(CC) -c ast.cpp
 
-errors.o: errors.cpp errors.h
+errors.o: errors.cpp errors.h lexer.h location.h ast.h
 	$(CC) -c errors.cpp
 
 clean:

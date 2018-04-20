@@ -30,7 +30,8 @@ class StringConst;
 class BoolConst;
 class DoubleConst;
 
-enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_ERROR};
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_STRING, T_ERROR};
+extern string TypeNames[];
 
 #ifndef YYBISON
 #include "grammar.tab.hpp"          
@@ -143,6 +144,7 @@ public:
 
 class Access : public Expression{
 public:
+	Identifier *id;
 	string name;
 	Access(YYLTYPE, string);
 
@@ -157,33 +159,35 @@ public:
 
 	OpExpression(Operator *, Expression *, Expression *);
 	OpExpression(Operator *, Expression *);
+
+	void CheckExpression();
 };
 
 class IntConst : public Expression{
 public:
 	int val;
-	IntConst();
+	IntConst() {type = T_INT;}
 	IntConst(YYLTYPE, int);
 };
 
 class StringConst : public Expression{
 public:
 	string val;
-	StringConst();
+	StringConst() {type = T_STRING;}
 	StringConst(YYLTYPE, string);
 };
 
 class BoolConst : public Expression{
 public:
 	bool val;
-	BoolConst();
+	BoolConst() {type = T_BOOL;}
 	BoolConst(YYLTYPE, bool);
 };
 
 class DoubleConst : public Expression{
 public:
 	double val;
-	DoubleConst();
+	DoubleConst() {type = T_FLOAT;}
 	DoubleConst(YYLTYPE, double);
 };
 
@@ -225,5 +229,7 @@ void CheckAndInsertIntoSymTable(map<string, TemplateType *> *m, TemplateType *d)
 void CheckAndInsertIntoSymTable(vector<Identifier *> *, Identifier *);
 StatementBlock* GetEnclosingStatementBlockParent(Ast *);
 FuncDecl* GetEnclosingFuncParent(Ast *);
+enum Type Coercible(Operator *, enum Type, enum Type);
+
 
 #endif

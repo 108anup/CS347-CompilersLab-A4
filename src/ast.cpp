@@ -7,6 +7,7 @@
 using namespace std;
 
 map<string, Declaration *> *global_sym_table;
+string TypeNames[] = {"void", "char", "int", "float", "bool", "string", "error"};
 
 void CheckAndInsertIntoSymTable(vector<Identifier *> *v, Identifier *d){
 	for (int i = 0; i < v->size(); ++i)
@@ -44,18 +45,23 @@ Identifier::Identifier(YYLTYPE loc, enum Type t, char *name) : Declaration(loc){
 
 IntConst::IntConst(YYLTYPE loc, int val) : Expression(loc){
 	this->val = val;
+	this->type = T_INT;
+
 }
 
 StringConst::StringConst(YYLTYPE loc, string val) : Expression(loc){
 	this->val = val;
+	this->type = T_STRING;
 }
 
 BoolConst::BoolConst(YYLTYPE loc, bool val) : Expression(loc){
 	this->val = val;
+	this->type = T_BOOL;
 }
 
 DoubleConst::DoubleConst(YYLTYPE loc, double val) : Expression(loc){
 	this->val = val;
+	this->type = T_FLOAT;
 }
 
 StatementBlock::StatementBlock(map<string, Identifier *> *m, vector<Statement *> *v){
@@ -104,6 +110,17 @@ OpExpression::OpExpression(Operator *op, Expression *rhs){
 
 	op->parent = this; 
 	rhs->parent = this; 
+}
+
+void OpExpression::CheckExpression(){
+	if(lhs)
+		lhs->CheckExpression();
+	rhs->CheckExpression();
+
+	if(lhs && lhs->type != T_ERROR && rhs->type != T_ERROR)
+		this->type = Coercible(this->op, lhs->type, rhs->type);
+	else
+		this->type = T_ERROR;
 }
 
 Operator::Operator(YYLTYPE loc, int op) : Ast(loc){
@@ -162,7 +179,6 @@ void StatementBlock::CheckStatements(){
 //Override Base class function
 void ExprStatement::CheckStatement(){
 	Access *a;
-	cout<<(typeid(this) == typeid(a));
 	this->expr->CheckExpression();
 }
 
@@ -174,11 +190,31 @@ void Access::CheckExpression(){
 		for (int i = 0; i < f->param_list->size(); ++i)
 		{
 			if((*f->param_list)[i]->name == this->name){
+				this->id = (*f->param_list)[i];
+				this->type = this->id->elem_type;
 				return;
 			}
 		}
-		if(global_sym_table->find(this->name) == global_sym_table->end())
+		if(global_sym_table->find(this->name) == global_sym_table->end()){
 			IdentifierNotDeclared(this->loc, this->name);
+			this->id = NULL;
+			this->type = T_ERROR;
+		}
+		else{
+			if(typeid(Identifier) != typeid(*((*global_sym_table)[this->name]))){
+				InvalidFuncCall(this->loc, this->name);
+				this->id = NULL;
+				this->type = T_ERROR;
+			}
+			else{
+				this->id = dynamic_cast<Identifier *>((*global_sym_table)[this->name]);
+				this->type = this->id->elem_type;
+			}
+		}
+	}
+	else{
+		this->id = (*(sb->symbol_table))[this->name];
+		this->type = this->id->elem_type;
 	}
 }
 
@@ -206,4 +242,17 @@ StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
 		parent = parent->parent;
 	}
 	return sb;
+}
+
+enum Type Coercible(Operator *op, enum Type t1, enum Type t2){
+	// Note break statements are absent on purpose
+	switch(t1){
+		case T_BOOL: if(t2 == T_BOOL) return T_BOOL;
+		case T_INT: if (t2 == T_BOOL || t2 == T_INT) return T_INT;
+		case T_FLOAT: if(t2 == T_BOOL || t2 == T_INT || t2 == T_FLOAT) return T_FLOAT; break;
+		case T_CHAR: if(t2 == T_CHAR) return T_CHAR;
+		case T_VOID: IncompatibleOperands(op, t1, t2); return T_ERROR;
+		case T_ERROR: return T_ERROR;
+	}
+	IncompatibleOperands(op, t1, t2); return T_ERROR;
 }
