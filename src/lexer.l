@@ -42,8 +42,7 @@ static void DoBeforeEachAction();
  /* -------------------- Comments ----------------------------- */
 {BEG_COMMENT}          { BEGIN(COMM); }
 <COMM>{END_COMMENT}    { BEGIN(N); }
- /*<COMM><<EOF>>          { //ReportError::UntermComment();
-                         return 0; }*/
+<COMM><<EOF>>          { UntermComment(); return 0;}
 <COMM>.                { /* ignore everything else that doesn't match */ }
 {SINGLE_COMMENT}       { /* skip to end of line for // comment */ }
 
@@ -92,12 +91,13 @@ L?\'(\\.|[^\\'])*\'             { yylval.stringConst_t = strdup(yytext); return(
 [0-9]+                          { yylval.intConst_t = atoi(yytext); return(NUM);}
 true                            { yylval.boolConst_t = true; return(BOOLEAN);}
 false                           { yylval.boolConst_t = false; return(BOOLEAN);}
-{L}({L}|{D})*                   { 	
-									if(yyleng > MAX_ID_LEN){
-										OutputError(&yylloc, "Identifier too Long");
-									}
-									yylval.name = strdup(yytext);
-									return(ID); }
+{L}({L}|{D})*                   {   
+                                  if(yyleng > MAX_ID_LEN){
+                                    LongIdentifier(&yylloc, yytext);
+                                  }
+                                  yylval.name = strdup(yytext);
+                                  return(ID); 
+                                }
 ";"                             { return(SEMI);}
 ","                             { return(COMMA); }
 "."                             { return(DOT); }

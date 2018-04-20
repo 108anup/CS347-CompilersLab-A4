@@ -30,7 +30,7 @@ class StringConst;
 class BoolConst;
 class DoubleConst;
 
-enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL};
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_ERROR};
 
 #ifndef YYBISON
 #include "grammar.tab.hpp"          
@@ -45,6 +45,8 @@ public:
 
 	Ast();
 	Ast(YYLTYPE loc);
+	//virtual void dummy() {}
+	//virtual ~Ast() {}
 };
 
 class Declaration : public Ast{
@@ -67,21 +69,27 @@ public:
 
 class FuncDecl : public Declaration{
 public:
+	YYLTYPE return_loc;
 	enum Type return_type;
 
-	map<string, Identifier *> *param_list;
+	vector<Identifier *> *param_list;
 	StatementBlock *stmt_block;
 
 	FuncDecl();
-	FuncDecl(YYLTYPE, enum Type, Identifier *, 
-	map<string, Identifier*> *, StatementBlock *);
+	FuncDecl(YYLTYPE loc, YYLTYPE ret_loc, enum Type t, char *name, 
+	vector<Identifier *> *pl, StatementBlock *sb);
 };
 
-class Statement : public Ast{};
+class Statement : public Ast{
+public:
+	//virtual void CheckStatement() {}
+};
 
 class ExprStatement : public Statement{
 public:
 	Expression *expr;
+
+	//void CheckStatement();
 };
 
 class SelStatement : public Statement{
@@ -114,6 +122,7 @@ public:
 
 	StatementBlock();
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
+	//void CheckStatements();
 };
 
 class Operator : public Ast{
@@ -128,12 +137,16 @@ public:
 
 	Expression() {}
 	Expression(YYLTYPE loc) : Ast(loc) {}
+
+	//virtual void CheckExpression() {}
 };
 
 class Access : public Expression{
 public:
 	string name;
 	Access(YYLTYPE, string);
+
+	//void CheckExpression();
 };
 
 
@@ -176,9 +189,41 @@ public:
 };
 
 template <typename TemplateType>
-void setParent(vector<TemplateType *> *, Ast *);
+void setParent(vector<TemplateType *> *node, Ast *parent){
+	for (int i = 0; i < node->size(); ++i)
+	{
+		(*node)[i]->parent = parent; 
+	}
+}
 
 template <typename TemplateType>
-void setParent(map<string, TemplateType *> *, Ast *);
+void setParent(map<string, TemplateType *> *node, Ast *parent){
+	for (typename map<string, TemplateType *>::iterator i = node->begin(); i != node->end(); ++i)
+	{
+		(i->second)->parent = parent; 
+	}
+}
+
+template <typename TemplateType>
+void printMap(map<string, TemplateType *> *node, Ast *parent){
+	for (typename map<string, TemplateType *>::iterator i = node->begin(); i != node->end(); ++i)
+	{
+		cout<<i->first;
+	}
+}
+
+template <typename TemplateType>
+void CheckAndInsertIntoSymTable(map<string, TemplateType *> *m, TemplateType *d){
+	if(m->find(d->name) != m->end()){
+		DeclConflict(d, (*m)[d->name]);
+		// By this we ignore that the second declaration was ever made
+		// This is the context in which subsequent sematic analysis is done.
+	}
+	else
+		(*m)[d->name] = d;
+}
+
+void CheckAndInsertIntoSymTable(vector<Identifier *> *, Identifier *);
+StatementBlock* GetEnclosingStatementBlockParent(Ast *);
 
 #endif

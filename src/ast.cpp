@@ -2,25 +2,21 @@
 #include "ast.h"
 #include <string.h>
 #include <iostream>
+#include <typeinfo>
 
 using namespace std;
 
 map<string, Declaration *> *global_sym_table;
 
-template <typename TemplateType>
-void setParent(vector<TemplateType *> *node, Ast *parent){
-	for (int i = 0; i < node->size(); ++i)
+void CheckAndInsertIntoSymTable(vector<Identifier *> *v, Identifier *d){
+	for (int i = 0; i < v->size(); ++i)
 	{
-		(*node)[i]->parent = parent; 
+		if((*v)[i]->name == d->name){
+			DeclConflict((Declaration *) d, (Declaration *) (*v)[i]);
+			return;
+		}
 	}
-}
-
-template <typename TemplateType>
-void setParent(map<string, TemplateType *> *node, Ast *parent){
-	for (typename map<string, TemplateType *>::iterator i = node->begin(); i != node->end(); ++i)
-	{
-		(i->second)->parent = parent; 
-	}
+	v->push_back(d);
 }
 
 Ast::Ast(YYLTYPE loc){
@@ -70,13 +66,14 @@ StatementBlock::StatementBlock(map<string, Identifier *> *m, vector<Statement *>
 	setParent(m, this);
 }
 
-FuncDecl::FuncDecl(YYLTYPE loc, enum Type t, Identifier *id, 
-	map<string, Identifier*> *pl, StatementBlock *sb) : Declaration(loc){
-	this->return_type = id->elem_type = t; id->is_array = false;
+FuncDecl::FuncDecl(YYLTYPE loc, YYLTYPE ret_loc, enum Type t, char *name, 
+	vector<Identifier *> *pl, StatementBlock *sb) : Declaration(loc){
+	this->return_type = t;
+	this->return_loc = ret_loc;
 	this->param_list = pl;
 	this->stmt_block = sb;
+	this->name = name;
 
-	id->parent = this;
 	setParent(pl, this);
 	sb->parent = this;
 }
@@ -148,3 +145,36 @@ IterStatement::IterStatement(ExprStatement *i, ExprStatement *c, Expression *e, 
 	c->parent = this;
 	e->parent = this;
 }
+
+/*
+void StatementBlock::CheckStatements(){
+	//stmt list is public member
+	for (int i = 0; i < stmt_list->size(); ++i)
+	{	
+		(*stmt_list)[i]->CheckStatement();
+	}
+}
+
+//Override Base class function
+void ExprStatement::CheckStatement(){
+	this->expr->CheckExpression();
+}
+
+void Access::CheckExpression(){
+	StatementBlock *sb =  GetEnclosingStatementBlockParent((Ast *) this);
+	if(sb->symbol_table->find(this->name) == sb->symbol_table->end()){
+		IdentifierNotDeclared(this->loc, this->name);
+	}
+}
+
+StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
+	Ast *parent = a->parent;
+	StatementBlock *sb = NULL;
+	while(parent){
+		if(typeid(sb) == typeid(parent)){
+			sb = dynamic_cast<StatementBlock *>(parent);
+		}
+		parent = parent->parent;
+	}
+	return sb;
+}*/

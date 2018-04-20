@@ -6,13 +6,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include "ast.h"
 
 using namespace std;
 
-void UnderlineErrorInLine(const char *line, YYLTYPE *pos);
-void OutputError(YYLTYPE *loc, string msg);
-void Formatted(YYLTYPE *loc, const char *format, ...);
-void yyerror(const char *msg);
+void UnderlineErrorInLine(const char *, YYLTYPE *);
+void OutputError(YYLTYPE *, string );
+void Formatted(YYLTYPE *, const char *, ...);
+void UntermComment();
+void DeclConflict(Declaration *, Declaration *);
+void LongIdentifier(YYLTYPE *, const char *);
+void IdentifierNotDeclared(YYLTYPE *, string);
+void yyerror(const char *);
 
 extern int numErrors;
 
