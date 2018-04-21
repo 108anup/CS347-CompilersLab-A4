@@ -60,7 +60,6 @@ public:
   string label;
   
   Declaration(YYLTYPE loc) : Ast(loc) {offset = -1;}
-
 };
 
 class Identifier : public Declaration{
@@ -111,6 +110,8 @@ public:
 
 	SelStatement (Expression *, Statement*, Statement*);
 	SelStatement (Expression *, Statement *);
+  void CheckStatement();
+  void Emit();
 };
 
 class IterStatement : public Statement{
@@ -123,7 +124,8 @@ public:
 
 	IterStatement(Expression *, Statement *);
 	IterStatement(ExprStatement *, ExprStatement *, Expression *, Statement *);
-
+  void CheckStatement();
+  void Emit();
 };
 
 class StatementBlock : public Statement{
@@ -134,7 +136,7 @@ public:
   
 	StatementBlock() {frame_size = 0;}
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
-	void CheckStatements();
+	void CheckStatement();
   void CalcOffsets();
   void Emit();
 };
@@ -247,6 +249,5 @@ StatementBlock* GetEnclosingStatementBlockParent(Ast *);
 FuncDecl* GetEnclosingFuncParent(Ast *);
 enum Type Coercible(Operator *, enum Type, enum Type);
 enum Type Coercible(Operator *, enum Type);
-
 
 #endif

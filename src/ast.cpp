@@ -176,12 +176,13 @@ IterStatement::IterStatement(ExprStatement *i, ExprStatement *c, Expression *e, 
 	e->parent = this;
 }
 
-void StatementBlock::CheckStatements(){
+void StatementBlock::CheckStatement(){
 	//stmt list is public member
 	for (int i = 0; i < stmt_list->size(); ++i)
 	{	
 		(*stmt_list)[i]->CheckStatement();
 	}
+  this->CalcOffsets();
 }
 
 //Override Base class function
@@ -190,40 +191,79 @@ void ExprStatement::CheckStatement(){
 	this->expr->CheckExpression();
 }
 
+void SelStatement::CheckStatement(){
+  this->test->CheckExpression();
+  if(this->test->type != T_BOOL){
+    TestNotBoolean(this->test);
+  }
+  this->body_true->CheckStatement();
+  if(this->body_false)
+    this->body_false->CheckStatement();
+}
+
+void IterStatement::CheckStatement(){
+  if(this->loop_type == WHILE){
+    this->expr->CheckExpression();
+    if(this->expr->type != T_BOOL){
+      TestNotBoolean(this->expr);
+    }
+  }
+  else if(this->loop_type == FOR){
+    this->init->CheckStatement();
+    this->cond->CheckStatement();
+    if(this->cond->expr->type != T_BOOL){
+      TestNotBoolean(this->expr);
+    }
+    this->expr->CheckExpression();
+  }
+  else
+    Formatted(NULL, "CodeGen: Unknown loop_type: %d", loop_type);
+  this->body->CheckStatement();
+}
+
 void Access::CheckExpression(){
-	StatementBlock *sb =  GetEnclosingStatementBlockParent((Ast *) this);
-	FuncDecl *f;
-	if(sb->symbol_table->find(this->name) == sb->symbol_table->end()){
-		f = GetEnclosingFuncParent(this);
-		for (int i = 0; i < f->param_list->size(); ++i)
-		{
-			if((*f->param_list)[i]->name == this->name){
-				this->id = (*f->param_list)[i];
-				this->type = this->id->elem_type;
-				return;
-			}
-		}
-		if(global_sym_table->find(this->name) == global_sym_table->end()){
-			IdentifierNotDeclared(this->loc, this->name);
-			this->id = NULL;
-			this->type = T_ERROR;
-		}
-		else{
-			if(typeid(Identifier) != typeid(*((*global_sym_table)[this->name]))){
-				InvalidFuncCall(this->loc, this->name);
-				this->id = NULL;
-				this->type = T_ERROR;
-			}
-			else{
-				this->id = dynamic_cast<Identifier *>((*global_sym_table)[this->name]);
-				this->type = this->id->elem_type;
-			}
-		}
-	}
-	else{
-		this->id = (*(sb->symbol_table))[this->name];
-		this->type = this->id->elem_type;
-	}
+  StatementBlock *sb;
+  FuncDecl *f;
+  sb = GetEnclosingStatementBlockParent((Ast *) this);
+
+  // Check all statementblocks starting from innermost
+  while(sb != NULL){
+    if(sb->symbol_table->find(this->name) != sb->symbol_table->end()){
+      this->id = (*(sb->symbol_table))[this->name];
+      this->type = this->id->elem_type;
+      return;
+    }
+    sb = GetEnclosingStatementBlockParent((Ast *) sb);
+  }
+
+  // Check Enclosing function's parameter list
+  f = GetEnclosingFuncParent(this);
+  for (int i = 0; i < f->param_list->size(); ++i)
+  {
+    if((*f->param_list)[i]->name == this->name){
+      this->id = (*f->param_list)[i];
+      this->type = this->id->elem_type;
+      return;
+    }
+  }
+
+  // Check global symbol table
+  if(global_sym_table->find(this->name) == global_sym_table->end()){
+    IdentifierNotDeclared(this->loc, this->name);
+    this->id = NULL;
+    this->type = T_ERROR;
+  }
+  else{
+    if(typeid(Identifier) != typeid(*((*global_sym_table)[this->name]))){
+      InvalidFuncCall(this->loc, this->name);
+      this->id = NULL;
+      this->type = T_ERROR;
+    }
+    else{
+      this->id = dynamic_cast<Identifier *>((*global_sym_table)[this->name]);
+      this->type = this->id->elem_type;
+    }
+  }
 }
 
 FuncDecl* GetEnclosingFuncParent(Ast *a){
@@ -240,16 +280,18 @@ FuncDecl* GetEnclosingFuncParent(Ast *a){
 }
 
 StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
-	Ast *parent = a->parent;
-	StatementBlock *sb = NULL;
-	while(parent){
-		if(typeid(StatementBlock) == typeid(*parent)){
-			sb = dynamic_cast<StatementBlock *>(parent);
-			break;
-		}
-		parent = parent->parent;
-	}
-	return sb;
+  if(a != NULL){
+    Ast *parent = a->parent;
+    StatementBlock *sb = NULL;
+    while(parent != NULL){
+      if(typeid(StatementBlock) == typeid(*parent)){
+        sb = dynamic_cast<StatementBlock *>(parent);
+        break;
+      }
+      parent = parent->parent;
+    }
+    return sb;
+  }
 }
 
 enum Type Coercible(Operator *op, enum Type t1, enum Type t2){

@@ -1,10 +1,21 @@
 #include "mips.h"
 #include <stdio.h>
 #include <map>
+#include <iostream>
+#include <sstream>
+
+using namespace std;
 
 static void PushRegToStack(char *reg){
   printf("addiu $sp $sp -4\n");
   printf("sw $%s 4($sp)\n", reg);
+}
+
+static string GetLabel(){
+  static int num_label = 0;
+  ostringstream s;
+  s << "_label" << num_label++;
+  return s.str();
 }
 
 map<int, string> opcodes;
@@ -18,6 +29,7 @@ void InitCodeGenerator(){
 
 void EmitPreamble()
 {
+  printf(".align 2\n");
   printf(".text\n");
   printf(".globl _main\n");
 }
@@ -59,7 +71,50 @@ void StatementBlock::Emit(){
 }
 
 void ExprStatement::Emit(){
-  this->expr->Emit();
+  if(this->expr)
+    this->expr->Emit();
+}
+
+void SelStatement::Emit(){
+  string cond_false = GetLabel();
+  this->test->Emit();
+  printf("beq $a0 $zero %s\n", cond_false.c_str());
+  this->body_true->Emit();
+
+  if(this->body_false){
+    string outside = GetLabel();
+    printf("j %s\n", outside.c_str());
+    printf("%s:\n", cond_false.c_str());
+    this->body_false->Emit();
+    printf("%s:\n", outside.c_str());
+  }
+  else{
+    printf("%s:\n", cond_false.c_str());
+  }
+}
+
+void IterStatement::Emit(){
+  string loop_start = GetLabel();
+  string cond_false = GetLabel();
+
+  if(loop_type == WHILE){
+    printf("%s:\n", loop_start.c_str());
+    this->expr->Emit();
+    printf("beq $a0 $zero %s\n", cond_false.c_str());
+    this->body->Emit();
+    printf("j %s\n", loop_start.c_str());
+    printf("%s:\n", cond_false.c_str());
+  }
+  else{ // (loop_type == FOR)
+    this->init->Emit();
+    printf("%s:\n", loop_start.c_str());
+    this->cond->Emit();
+    printf("beq $a0 $zero %s\n", cond_false.c_str());
+    this->body->Emit();
+    this->expr->Emit();
+    printf("j %s\n", loop_start.c_str());
+    printf("%s:\n", cond_false.c_str());
+  }
 }
 
 void LogicalNot(char *s){
@@ -91,7 +146,7 @@ void OpExpression::Emit(){
       printf("lw $t1 4($sp)\n");
       printf("slt $t2 $a0 $t1\n");
       printf("slt $t3 $t1 $a0\n");
-      printf("or $a0 $t2 $t3");
+      printf("or $a0 $t2 $t3\n");
       LogicalNot("a0");
       return;
     case NE_OP:
@@ -126,6 +181,7 @@ void OpExpression::Emit(){
       return;
     default:
       Formatted(NULL, "CodeGen: Op %d not found", op->op);
+      return;
     }
   }
   else{
@@ -137,13 +193,13 @@ void OpExpression::Emit(){
     case PLUS:
       return;
     case MINUS:
-      printf("sub $a0 $zero $a0\n");
+      printf("sub $a0 $zero $a0\n"); return;
     case INC_OP:
-      printf("addiu $a0 $a0 1\n");
+      printf("addiu $a0 $a0 1\n"); return;
     case DEC_OP:
-      printf("addiu $a0 $a0 -1\n");
+      printf("addiu $a0 $a0 -1\n"); return;
     default:
-      Formatted(NULL, "CodeGen: Op %d not found", op->op);
+      Formatted(NULL, "CodeGen: Op %d not found", op->op); return;
     }
   }
 }

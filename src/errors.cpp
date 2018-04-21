@@ -44,7 +44,6 @@ void DeclConflict(Declaration *decl, Declaration *prevDecl) {
     OutputError(decl->loc, s.str());
 }
 
-
 void UntermComment() {
     OutputError(NULL, "Input ends with unterminated comment");
 }
@@ -78,6 +77,20 @@ void InvalidFuncCall(YYLTYPE *loc, string name) {
     s << "Trying to call function without parenthesis: " << name;
     OutputError(loc, s.str());
 }
+
+void TestNotBoolean(Expression *expr) {
+    OutputError(expr->loc, "Test expression must have boolean type");
+}
+  
+void NoMainFound() {
+    OutputError(NULL, "Linker: function 'main' not defined");
+}
+
+void yyerror(const char *msg) {
+    Formatted(&yylloc, "%s", msg);
+}
+
+int numErrors = 0;
 
 /*
 void ReportError::UntermString(yyltype *loc, const char *str) {
@@ -129,17 +142,3 @@ void PrintArgMismatch(Expression *arg, int argIndex, Type *given) {
         << " given, int/bool/string expected";
     OutputError(arg->GetLocation(), s.str());
 }*/
-
-void TestNotBoolean(Expression *expr) {
-    OutputError(expr->loc, "Test expression must have boolean type");
-}
-  
-void NoMainFound() {
-    OutputError(NULL, "Linker: function 'main' not defined");
-}
-
-void yyerror(const char *msg) {
-    Formatted(&yylloc, "%s", msg);
-}
-
-int numErrors = 0;

@@ -100,6 +100,7 @@
 %%
 
 program: declaration_list {
+  setParent(global_sym_table, NULL);
   Identifier *identifier;
   if(numErrors == 0){
     printf(".data\n");
@@ -113,12 +114,21 @@ program: declaration_list {
       }      
  	  }
     EmitPreamble();
+    bool found_main = false;
     for (map<string, Declaration *>::iterator i = global_sym_table->begin(); i != global_sym_table->end(); ++i)
 	  {
       if(typeid(*(i->second)) == typeid(FuncDecl)){
         i->second->Emit();
+        if(i->second->name == "main"){
+          found_main = true;
+          printf("li $a0 0\n");
+          printf("li $v0 17\n");
+          printf("syscall\n");
+        }
       }      
  	  }
+    if(!found_main)
+      NoMainFound();
   }
  }
 ;
@@ -154,8 +164,7 @@ function_declaration
     }
   }
   $$ = new FuncDecl(@2, @1, $1, $2, $4, $6);
-  $$->stmt_block->CheckStatements();
-  $$->stmt_block->CalcOffsets();
+  $$->stmt_block->CheckStatement();
   $$->CalcOffsets();
 }
 ;
@@ -261,7 +270,7 @@ selection_statement
 ;
 
 expression_statement
-: SEMI { $$ = NULL; }
+: SEMI { $$ = new ExprStatement(NULL); }
 | assignment_expression SEMI { $$ = new ExprStatement($1);}
 ;
 
