@@ -167,6 +167,18 @@ public:
   void Emit();
 };
 
+class Call : public Expression{
+public:
+	FuncDecl *fd;
+	string name;
+  vector<Expression *> *args;
+  
+	Call(YYLTYPE, string, vector<Expression *> *);
+
+	void CheckExpression();
+  void Emit();
+};
+
 class OpExpression : public Expression {
 public:
 	Operator *op;

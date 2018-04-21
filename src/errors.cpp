@@ -78,6 +78,12 @@ void InvalidFuncCall(YYLTYPE *loc, string name) {
     OutputError(loc, s.str());
 }
 
+void VariableNotFunction(YYLTYPE *loc, string name) {
+    ostringstream s;
+    s << "Trying to call non function: " << name;
+    OutputError(loc, s.str());
+}
+
 void TestNotBoolean(Expression *expr) {
     OutputError(expr->loc, "Test expression must have boolean type");
 }
@@ -88,6 +94,20 @@ void NoMainFound() {
 
 void yyerror(const char *msg) {
     Formatted(&yylloc, "%s", msg);
+}
+
+void NumArgsMismatch(FuncDecl *fn, int numExpected, int numGiven) {
+    ostringstream s;
+    s << "Function '"<< fn <<
+      "' expects " << numExpected << " argument(s)" << numGiven << " given";
+    OutputError(fn->loc, s.str());
+}
+
+void ArgMismatch(Expression *arg, int argIndex,
+                 enum Type given, enum Type expected) {
+  ostringstream s;
+  s << "Incompatible argument " << argIndex << ": " << TypeNames[given] << " given, " << TypeNames[expected] << " expected";
+  OutputError(arg->loc, s.str());
 }
 
 int numErrors = 0;
@@ -117,28 +137,9 @@ void ReportError::NewArraySizeNotInteger(Expr *sizeExpr) {
     OutputError(sizeExpr->GetLocation(), "Size for NewArray must be an integer");
 }
 
-void ReportError::NumArgsMismatch(Identifier *fnIdent, int numExpected, int numGiven) {
-    ostringstream s;
-    s << "Function '"<< fnIdent << "' expects " << numExpected << " argument" << (numExpected==1?"":"s") 
-      << " but " << numGiven << " given";
-    OutputError(fnIdent->GetLocation(), s.str());
-}
-
-void ReportError::ArgMismatch(Expr *arg, int argIndex, Type *given, Type *expected) {
-  ostringstream s;
-  s << "Incompatible argument " << argIndex << ": " << given << " given, " << expected << " expected";
-  OutputError(arg->GetLocation(), s.str());
-}
-
 void ReportError::ReturnMismatch(ReturnStmt *rStmt, Type *given, Type *expected) {
     ostringstream s;
     s << "Incompatible return: " << given << " given, " << expected << " expected";
     OutputError(rStmt->GetLocation(), s.str());
 }
-
-void PrintArgMismatch(Expression *arg, int argIndex, Type *given) {
-    ostringstream s;
-    s << "Incompatible argument " << argIndex << ": " << given
-        << " given, int/bool/string expected";
-    OutputError(arg->GetLocation(), s.str());
-}*/
+*/

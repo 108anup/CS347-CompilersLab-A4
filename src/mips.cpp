@@ -31,11 +31,11 @@ void EmitPreamble()
 {
   printf(".align 2\n");
   printf(".text\n");
-  printf(".globl _main\n");
+  printf(".globl main\n");
 }
 
 void FuncDecl::Emit(){
-  printf("_%s:\n", this->name.c_str());
+  printf("%s:\n", this->name.c_str());
   printf("move $fp $sp\n");
   PushRegToStack("ra");
   this->stmt_block->Emit();
@@ -195,7 +195,8 @@ void OpExpression::Emit(){
     case MINUS:
       printf("sub $a0 $zero $a0\n"); return;
     case INC_OP:
-      printf("addiu $a0 $a0 1\n"); return;
+      printf("addiu $a0 $a0 1\n");
+      return;
     case DEC_OP:
       printf("addiu $a0 $a0 -1\n"); return;
     default:
@@ -214,5 +215,8 @@ void Access::Emit(){
   }
   else
     printf("lw $a0 %d($fp)\n", this->id->offset);
+}
 
+void Call::Emit(){
+  
 }

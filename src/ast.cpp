@@ -99,6 +99,13 @@ Access::Access(YYLTYPE loc, string name) : Expression(loc){
 	this->name = name;
 }
 
+Call::Call(YYLTYPE loc, string name, vector<Expression *> *args) : Expression(loc){
+	this->name = name;
+  this->args = args;
+
+  setParent(args, this);
+}
+
 OpExpression::OpExpression(Operator *op, Expression *lhs, Expression *rhs){
 	this->op = op;
 	this->lhs = lhs;
@@ -262,6 +269,41 @@ void Access::CheckExpression(){
     else{
       this->id = dynamic_cast<Identifier *>((*global_sym_table)[this->name]);
       this->type = this->id->elem_type;
+    }
+  }
+}
+
+void Call::CheckExpression(){
+  if(global_sym_table->find(this->name) == global_sym_table->end()){
+    IdentifierNotDeclared(this->loc, this->name);
+    this->fd = NULL;
+    this->type = T_ERROR;
+  }
+  else{
+    if(typeid(Identifier) == typeid(*((*global_sym_table)[this->name]))){
+      VariableNotFunction(this->loc, this->name);
+      this->fd = NULL;
+      this->type = T_ERROR;
+    }
+    else{
+      this->fd = dynamic_cast<FuncDecl *>((*global_sym_table)[this->name]);
+      this->type = this->fd->return_type;
+
+      int num_expected = fd->param_list->size();
+      int num_given = this->args->size();
+      if(num_expected != num_given){
+        NumArgsMismatch(fd, num_expected, num_given);
+        this->type = T_ERROR;
+      }
+      else{
+        for(int i = 0; i<num_given; i++){
+          if((*this->args)[i]->type != (*fd->param_list)[i]->elem_type){
+            ArgMismatch(this, i+1, (*this->args)[i]->type,
+                        (*fd->param_list)[i]->elem_type);
+            this->type = T_ERROR;
+          }
+        }
+      }
     }
   }
 }

@@ -20,7 +20,10 @@ void IdentifierNotDeclared(YYLTYPE *, string);
 void IncompatibleOperands(Operator *, enum Type, enum Type);
 void IncompatibleOperands(Operator *, enum Type);
 void InvalidFuncCall(YYLTYPE *, string);
-void TestNotBoolean(Expression *expr);
+void VariableNotFunction(YYLTYPE *, string);
+void NumArgsMismatch(FuncDecl *, int, int);
+void ArgMismatch(Expression *, int, enum Type, enum Type);
+void TestNotBoolean(Expression *);
 void NoMainFound();
 void yyerror(const char *);
 
