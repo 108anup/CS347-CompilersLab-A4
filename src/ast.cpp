@@ -6,6 +6,9 @@
 
 using namespace std;
 
+const int VAR_SIZE = 4;
+const int OFFSET_FIRST_PARAM = 4;
+const int OFFSET_FIRST_LOCAL = -8;
 map<string, Declaration *> *global_sym_table;
 string TypeNames[] = {"void", "char", "int", "float", "bool", "string", "error"};
 
@@ -34,13 +37,15 @@ Identifier::Identifier(YYLTYPE loc, enum Type t, char *name, vector<IntConst *> 
 	this->name.assign(name);
 	this->is_array  = true;
 	this->elem_type = t;
-	setParent(dimList, this);
+  this->is_global = false;
+  setParent(dimList, this);
 }
 
 Identifier::Identifier(YYLTYPE loc, enum Type t, char *name) : Declaration(loc){
 	this->name.assign(name);
 	this->elem_type = t;
 	this->is_array = false;
+  this->is_global = false;
 }
 
 IntConst::IntConst(YYLTYPE loc, int val) : Expression(loc){
@@ -67,7 +72,8 @@ DoubleConst::DoubleConst(YYLTYPE loc, double val) : Expression(loc){
 StatementBlock::StatementBlock(map<string, Identifier *> *m, vector<Statement *> *v){
 	this->stmt_list = v;
 	this->symbol_table = m;
-
+  this->frame_size = 0;
+  
 	setParent(v, this);
 	setParent(m, this);
 }
@@ -79,7 +85,7 @@ FuncDecl::FuncDecl(YYLTYPE loc, YYLTYPE ret_loc, enum Type t, char *name,
 	this->param_list = pl;
 	this->stmt_block = sb;
 	this->name = name;
-
+  
 	setParent(this->param_list, this);
 	this->stmt_block->parent = this;
 }
@@ -119,8 +125,10 @@ void OpExpression::CheckExpression(){
 
 	if(lhs && lhs->type != T_ERROR && rhs->type != T_ERROR)
 		this->type = Coercible(this->op, lhs->type, rhs->type);
-	else
-		this->type = T_ERROR;
+	else if(lhs == NULL)
+    this->type = Coercible(this->op, rhs->type);
+  else
+    this->type = T_ERROR;
 }
 
 Operator::Operator(YYLTYPE loc, int op) : Ast(loc){
@@ -246,13 +254,45 @@ StatementBlock* GetEnclosingStatementBlockParent(Ast *a){
 
 enum Type Coercible(Operator *op, enum Type t1, enum Type t2){
 	// Note break statements are absent on purpose
+  int oper = op->op;
+  if(oper == LT || oper == GT || oper == EQ_OP || oper == NE_OP){
+    if(t1 == t2) return T_BOOL;
+    switch(t1){
+		case T_INT: if (t2 == T_FLOAT || t2 == T_INT) return T_BOOL;
+		case T_FLOAT: if(t2 == T_FLOAT || t2 == T_INT) return T_BOOL;	
+    default: IncompatibleOperands(op, t1, t2); return T_ERROR;
+    }
+  }
+  if(oper == AND_OP || oper ==  OR_OP){
+    if(t1 == t2 && t1 == T_BOOL) return T_BOOL;
+    else {IncompatibleOperands(op, t1, t2); return T_ERROR;}
+  }
 	switch(t1){
-		case T_BOOL: if(t2 == T_BOOL) return T_BOOL;
-		case T_INT: if (t2 == T_BOOL || t2 == T_INT) return T_INT;
-		case T_FLOAT: if(t2 == T_BOOL || t2 == T_INT || t2 == T_FLOAT) return T_FLOAT; break;
-		case T_CHAR: if(t2 == T_CHAR) return T_CHAR;
-		case T_VOID: IncompatibleOperands(op, t1, t2); return T_ERROR;
-		case T_ERROR: return T_ERROR;
+  case T_INT: if(t2 == T_INT) return T_INT;
+  case T_FLOAT: if(t2 == T_INT || t2 == T_FLOAT) return T_FLOAT;
+  case T_BOOL:
+  case T_CHAR:
+  case T_VOID:
+  case T_ERROR: IncompatibleOperands(op, t1, t2); return T_ERROR;
+  default: Formatted(NULL, "CodeGen: Unknown Type: %d", t1);
 	}
 	IncompatibleOperands(op, t1, t2); return T_ERROR;
+}
+
+enum Type Coercible(Operator *op, enum Type t){
+  int oper = op->op;
+  if(oper == NOT){
+    if (t == T_BOOL) return T_BOOL;
+    else {IncompatibleOperands(op, t); return T_ERROR;}
+  }
+  switch(t){
+  case T_INT: return T_INT;
+  case T_FLOAT: return T_FLOAT;
+  case T_BOOL:
+  case T_CHAR:
+  case T_VOID:
+  case T_ERROR: IncompatibleOperands(op, t); return T_ERROR;
+  default: Formatted(NULL, "CodeGen: Unknown Type: %d", t);
+	}
+	IncompatibleOperands(op, t); return T_ERROR;
 }

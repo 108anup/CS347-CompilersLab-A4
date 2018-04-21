@@ -18,6 +18,7 @@ void DeclConflict(Declaration *, Declaration *);
 void LongIdentifier(YYLTYPE *, const char *);
 void IdentifierNotDeclared(YYLTYPE *, string);
 void IncompatibleOperands(Operator *, enum Type, enum Type);
+void IncompatibleOperands(Operator *, enum Type);
 void InvalidFuncCall(YYLTYPE *, string);
 void yyerror(const char *);
 

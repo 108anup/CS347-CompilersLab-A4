@@ -1,18 +1,20 @@
 %locations
 
 %code requires {
-  #include "errors.h"
-  #include "location.h"
-  #include "lexer.h"
-  #include "ast.h"
-  #include <vector>
-  #include <map>
+#include "errors.h"
+#include "location.h"
+#include "lexer.h"
+#include "ast.h"
+#include <typeinfo>
+#include "mips.h"
+#include <vector>
+#include <map>
 
   using namespace std;
 }
 
 %{
-  #include <stdio.h>
+#include <stdio.h>
 
   extern int yylex();
   extern int yyerror(char *);
@@ -97,6 +99,30 @@
 
 %%
 
+program: declaration_list {
+  Identifier *identifier;
+  if(numErrors == 0){
+    printf(".data\n");
+    for (map<string, Declaration *>::iterator i = global_sym_table->begin(); i != global_sym_table->end(); ++i)
+	  {
+      if(typeid(*(i->second)) == typeid(Identifier)){
+        identifier = dynamic_cast<Identifier *>(i->second);
+        identifier->is_global = true;
+        identifier->label = "v_" + identifier->name;
+        printf("%s: .word 0\n", identifier->label.c_str());
+      }      
+ 	  }
+    EmitPreamble();
+    for (map<string, Declaration *>::iterator i = global_sym_table->begin(); i != global_sym_table->end(); ++i)
+	  {
+      if(typeid(*(i->second)) == typeid(FuncDecl)){
+        i->second->Emit();
+      }      
+ 	  }
+  }
+ }
+;
+
 declaration_list
 : declaration_list declaration {CheckAndInsertIntoSymTable(global_sym_table, $2);}
 | /* EPSILON */ {global_sym_table = new map<string, Declaration *>;}
@@ -129,6 +155,8 @@ function_declaration
   }
   $$ = new FuncDecl(@2, @1, $1, $2, $4, $6);
   $$->stmt_block->CheckStatements();
+  $$->stmt_block->CalcOffsets();
+  $$->CalcOffsets();
 }
 ;
 
@@ -200,7 +228,7 @@ binary_operator
 | MINUS {$$ = new Operator(@1, MINUS);}
 | STAR {$$ = new Operator(@1, STAR);}
 | DIVIDE {$$ = new Operator(@1, DIVIDE);}
-// TODO:: Add modulus
+| MODULUS {$$ = new Operator(@1, MODULUS);}
 ;
 
 conditional_expression
@@ -219,7 +247,7 @@ conditional_operator
 
 assignment_expression
 : conditional_expression { $$ = $1; }
-| unary_expression ASSIGN assignment_expression { $$ = new OpExpression(new Operator(@2, ASSIGN), $1, $3); }
+| ID ASSIGN assignment_expression { $$ = new OpExpression(new Operator(@2, ASSIGN), new Access(@1, *(new string($1))), $3); }
 ;
 
 iteration_statement
@@ -249,6 +277,7 @@ int yyerror(char *s){
 
 int main(){
   InitScanner();
+  InitCodeGenerator();
   //yydebug = 1;
   return yyparse();
 }

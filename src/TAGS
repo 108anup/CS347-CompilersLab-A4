@@ -1,0 +1,553 @@
+
+lexer.h,21
+#define LEXER_H2,16
+
+ast.cpp,1057
+map<string, Declaration *> *global_sym_table;global_sym_table9,118
+string TypeNames[TypeNames10,164
+void CheckAndInsertIntoSymTable(12,247
+Ast::Ast(23,492
+Ast::Ast(28,571
+Identifier::Identifier(33,627
+Identifier::Identifier(40,840
+IntConst::IntConst(46,997
+StringConst::StringConst(52,1100
+BoolConst::BoolConst(57,1214
+DoubleConst::DoubleConst(62,1320
+StatementBlock::StatementBlock(67,1433
+FuncDecl::FuncDecl(75,1612
+ExprStatement::ExprStatement(87,1949
+Access::Access(92,2033
+OpExpression::OpExpression(96,2116
+OpExpression::OpExpression(106,2313
+void OpExpression::CheckExpression(115,2472
+Operator::Operator(126,2719
+SelStatement::SelStatement(130,2790
+SelStatement::SelStatement(140,2990
+IterStatement::IterStatement(149,3157
+IterStatement::IterStatement(158,3318
+void StatementBlock::CheckStatements(171,3585
+void ExprStatement::CheckStatement(180,3778
+void Access::CheckExpression(185,3863
+FuncDecl* GetEnclosingFuncParent(221,4857
+StatementBlock* GetEnclosingStatementBlockParent(234,5104
+enum Type Coercible(247,5388
+
+errors.cpp,347
+void UnderlineErrorInLine(11,160
+void OutputError(19,392
+void Formatted(30,785
+void DeclConflict(40,1001
+void UntermComment(48,1252
+void LongIdentifier(52,1341
+void IdentifierNotDeclared(58,1498
+void IncompatibleOperands(64,1663
+void InvalidFuncCall(70,1873
+void TestNotBoolean(133,4049
+void NoMainFound(137,4164
+void yyerror(141,4250
+
+location.h,222
+#define LOCATION_H2,19
+typedef struct YYLTYPE6,56
+	int first_line,8,81
+	int first_line, first_column;8,81
+	int last_line,9,112
+	int last_line, last_column;9,112
+} YYLTYPE;11,162
+# define YYLTYPE_IS_DECLARED 12,173
+
+errors.h,75
+#define ERRORS_H2,17
+#define MAX_ID_LEN 4,35
+using namespace std;11,157
+
+mips.h,20
+#define MIPS_H2,15
+
+ast.h,3177
+#define AST_H2,14
+using namespace std;10,125
+enum Type 33,455
+enum Type {T_VOID,Type::T_VOID33,455
+enum Type {T_VOID, T_CHAR,Type::T_CHAR33,455
+enum Type {T_VOID, T_CHAR, T_INT,Type::T_INT33,455
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT,Type::T_FLOAT33,455
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL,Type::T_BOOL33,455
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_STRING,Type::T_STRING33,455
+enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_STRING, T_ERROR}Type::T_ERROR33,455
+class Ast{Ast42,669
+	YYLTYPE *loc;Ast::loc44,688
+	Ast *parent;Ast::parent45,703
+	virtual void dummy(Ast::dummy49,745
+	virtual ~Ast(Ast::~Ast50,770
+class Declaration 53,793
+	Declaration(Declaration::Declaration55,833
+	string name;Declaration::name56,873
+class Identifier 59,891
+	bool is_array;Identifier::is_array61,938
+	enum Type elem_type;Identifier::elem_type62,954
+	vector<IntConst *> *dim_list;Identifier::dim_list63,976
+	int scope;Identifier::scope64,1007
+class FuncDecl 71,1143
+	YYLTYPE return_loc;FuncDecl::return_loc73,1188
+	enum Type return_type;FuncDecl::return_type74,1209
+	vector<Identifier *> *param_list;FuncDecl::param_list76,1234
+	StatementBlock *stmt_block;FuncDecl::stmt_block77,1269
+class Statement 84,1430
+	virtual void CheckStatement(Statement::CheckStatement86,1468
+class ExprStatement 89,1506
+	Expression *expr;ExprStatement::expr91,1554
+class SelStatement 96,1631
+	Expression *test;SelStatement::test98,1678
+	Statement *body_true;SelStatement::body_true99,1697
+	Statement *body_false;SelStatement::body_false100,1720
+class IterStatement 106,1846
+	int loop_type;IterStatement::loop_type108,1894
+	ExprStatement *init;IterStatement::init109,1910
+	ExprStatement *cond;IterStatement::cond110,1932
+	Expression *expr;IterStatement::expr111,1954
+	Statement *body;IterStatement::body112,2005
+class StatementBlock 119,2149
+	vector<Statement *> *stmt_list;StatementBlock::stmt_list121,2198
+	map<StatementBlock::map122,2231
+	map<string, Identifier *> *symbol_table;StatementBlock::symbol_table122,2231
+class Operator 129,2391
+	int op;Operator::op131,2428
+class Expression 135,2473
+	enum Type type;Expression::type137,2512
+	Expression(Expression::Expression139,2530
+	Expression(Expression::Expression140,2547
+	virtual void CheckExpression(Expression::CheckExpression142,2587
+class Access 145,2626
+	Identifier *id;Access::id147,2668
+	string name;Access::name148,2685
+class OpExpression 154,2755
+	Operator *op;OpExpression::op156,2804
+	Expression *lhs;OpExpression::lhs157,2819
+	Expression *rhs;OpExpression::rhs158,2837
+class IntConst 166,2982
+	int val;IntConst::val168,3026
+	IntConst(IntConst::IntConst169,3036
+class StringConst 173,3093
+	string val;StringConst::val175,3140
+	StringConst(StringConst::StringConst176,3153
+class BoolConst 180,3222
+	bool val;BoolConst::val182,3267
+	BoolConst(BoolConst::BoolConst183,3278
+class DoubleConst 187,3339
+	double val;DoubleConst::val189,3386
+	DoubleConst(DoubleConst::DoubleConst190,3399
+void setParent(195,3500
+void setParent(203,3673
+void printMap(211,3907
+void CheckAndInsertIntoSymTable(219,4125
+
+grammar.ypp,2739
+  char *name;name23,288
+  enum Type type;24,302
+  Declaration *decl;decl26,323
+  FuncDecl *funcDecl;funcDecl27,344
+  Identifier *varDecl;varDecl28,366
+  vector<IntConst *> *dimList;dimList29,389
+  StatementBlock *stmtBlock;stmtBlock31,421
+  vector<Statement *> *stmtList;stmtList32,450
+  map<string,string33,483
+  map<string, Identifier *> *varDecls;varDecls33,483
+  vector<Identifier *> *parList;parList34,522
+  Statement *stmt;stmt36,558
+  ExprStatement *exprStmt;exprStmt37,577
+  SelStatement *selStmt;selStmt38,604
+  IterStatement *iterStmt;iterStmt39,629
+  Expression *expr;expr41,657
+  OpExpression *opExpr;opExpr42,677
+  Operator *op;op43,701
+  Access *access;access44,717
+  int intConst_t;46,736
+  bool boolConst_t;47,754
+  char *stringConst_t;stringConst_t48,774
+  double doubleConst_t;49,797
+  IntConst *intConst;intConst51,822
+  BoolConst *boolConst;boolConst52,844
+  StringConst *stringConst;stringConst53,868
+  DoubleConst *doubleConst;doubleConst54,896
+| /* EPSILON */ {global_sym_table global_sym_table111,2354
+: variable_declaration 115,2438
+| function_declaration 116,2472
+: OPEN_CURLY variable_declarations statement_list CLOSED_CURLY 145,3426
+| /* EPSILON */ {$$ $$150,3637
+| /* EPSILON */ {$$ $$156,3920
+| BOOL164,4015
+| /* EPSILON */ {$$ $$169,4095
+: expression_statement 173,4160
+| selection_statement 174,4194
+| iteration_statement 175,4227
+| statement_block 176,4260
+: ID 180,4311
+| NUM 181,4360
+| REAL 182,4397
+| STRING_LITERAL 183,4438
+| OPEN_BRACKET assignment_expression CLOSED_BRACKET 184,4489
+: primary_expression 190,4629
+| unary_operator unary_expression 191,4663
+: PLUS %prec UPLUS 195,4750
+| MINUS %prec UMINUS 196,4802
+| NOT 197,4857
+| DEC_OP 198,4895
+| INC_OP 199,4938
+: unary_expression 203,5007
+| binary_arith_expression binary_operator unary_expression 204,5039
+: PLUS 208,5156
+| MINUS 209,5194
+| STAR 210,5234
+| DIVIDE 211,5272
+: binary_arith_expression 216,5362
+| conditional_expression conditional_operator binary_arith_expression 217,5401
+: LT 221,5534
+| GT 222,5568
+| AND_OP 223,5602
+| OR_OP 224,5644
+| EQ_OP 225,5684
+| NE_OP 226,5724
+: conditional_expression 230,5789
+| unary_expression ASSIGN assignment_expression 231,5827
+: WHILE OPEN_BRACKET assignment_expression CLOSED_BRACKET statement 235,5959
+| FOR OPEN_BRACKET expression_statement expression_statement assignment_expression CLOSED_BRACKET statement 236,6063
+: IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement ELSE statement 240,6238
+| IF OPEN_BRACKET assignment_expression CLOSED_BRACKET statement %prec "UIF" { $$ 241,6357
+: SEMI 245,6493
+| assignment_expression SEMI 246,6515
+int yyerror(254,6624
+int main(259,6688
+
+mips.cpp,24
+void EmitPreamble(3,19
+
+grammar.tab.cpp,9607
+#define YYBISON 44,2037
+#define YYBISON_VERSION 47,2078
+#define YYSKELETON_NAME 50,2133
+#define YYPURE 53,2188
+#define YYPUSH 56,2227
+#define YYPULL 59,2266
+#   define YY_NULLPTR 76,2571
+#   define YY_NULLPTR 78,2609
+# undef YYERROR_VERBOSE84,2714
+# define YYERROR_VERBOSE 85,2738
+# define YYERROR_VERBOSE 87,2771
+# define YY_YY_GRAMMAR_TAB_HPP_INCLUDED93,2946
+# define YYDEBUG 96,3023
+# define YYTOKENTYPE118,3415
+  enum yytokentype119,3436
+    ELSE yytokentype::ELSE121,3459
+    FOR yytokentype::FOR122,3475
+    IF yytokentype::IF123,3490
+    RETURN yytokentype::RETURN124,3504
+    WHILE yytokentype::WHILE125,3522
+    PTR_OP yytokentype::PTR_OP126,3539
+    INC_OP yytokentype::INC_OP127,3557
+    DEC_OP yytokentype::DEC_OP128,3575
+    AND_OP yytokentype::AND_OP129,3593
+    OR_OP yytokentype::OR_OP130,3611
+    LT yytokentype::LT131,3628
+    GT yytokentype::GT132,3642
+    LE_OP yytokentype::LE_OP133,3656
+    GE_OP yytokentype::GE_OP134,3673
+    EQ_OP yytokentype::EQ_OP135,3690
+    NE_OP yytokentype::NE_OP136,3707
+    DO yytokentype::DO137,3724
+    NOT yytokentype::NOT138,3738
+    AMP yytokentype::AMP139,3753
+    TILDE yytokentype::TILDE140,3768
+    STAR yytokentype::STAR141,3785
+    ASSIGN yytokentype::ASSIGN142,3801
+    OPEN_BRACKET yytokentype::OPEN_BRACKET143,3819
+    CLOSED_BRACKET yytokentype::CLOSED_BRACKET144,3843
+    OPEN_CURLY yytokentype::OPEN_CURLY145,3869
+    CLOSED_CURLY yytokentype::CLOSED_CURLY146,3891
+    OPEN_SQUARE yytokentype::OPEN_SQUARE147,3915
+    CLOSED_SQUARE yytokentype::CLOSED_SQUARE148,3938
+    SEMI yytokentype::SEMI149,3963
+    COMMA yytokentype::COMMA150,3979
+    DOT yytokentype::DOT151,3996
+    PLUS yytokentype::PLUS152,4011
+    MINUS yytokentype::MINUS153,4027
+    DIVIDE yytokentype::DIVIDE154,4044
+    MODULUS yytokentype::MODULUS155,4062
+    PIPE yytokentype::PIPE156,4081
+    XOR yytokentype::XOR157,4097
+    QUES yytokentype::QUES158,4112
+    COLON yytokentype::COLON159,4128
+    ID yytokentype::ID160,4145
+    BOOL yytokentype::BOOL161,4159
+    CHAR yytokentype::CHAR162,4175
+    INT yytokentype::INT163,4191
+    FLOAT yytokentype::FLOAT164,4206
+    VOID yytokentype::VOID165,4223
+    NUM yytokentype::NUM166,4239
+    REAL yytokentype::REAL167,4254
+    STRING_LITERAL yytokentype::STRING_LITERAL168,4270
+    BOOLEAN yytokentype::BOOLEAN169,4296
+    UPLUS yytokentype::UPLUS170,4315
+    UMINUS yytokentype::UMINUS171,4332
+union YYSTYPE178,4437
+typedef union YYSTYPE YYSTYPE;218,5182
+# define YYSTYPE_IS_TRIVIAL 219,5213
+# define YYSTYPE_IS_DECLARED 220,5243
+typedef struct YYLTYPE YYLTYPE;225,5359
+struct YYLTYPE226,5391
+  int first_line;YYLTYPE::first_line228,5408
+  int first_column;YYLTYPE::first_column229,5426
+  int last_line;YYLTYPE::last_line230,5446
+  int last_column;YYLTYPE::last_column231,5463
+# define YYLTYPE_IS_DECLARED 233,5485
+# define YYLTYPE_IS_TRIVIAL 234,5516
+# undef short249,5780
+typedef YYTYPE_UINT8 yytype_uint8;253,5822
+typedef unsigned char yytype_uint8;255,5863
+typedef YYTYPE_INT8 yytype_int8;259,5926
+typedef signed char yytype_int8;261,5965
+typedef YYTYPE_UINT16 yytype_uint16;265,6027
+typedef unsigned short int yytype_uint16;267,6070
+typedef YYTYPE_INT16 yytype_int16;271,6140
+typedef short int yytype_int16;273,6181
+#  define YYSIZE_T 278,6260
+#  define YYSIZE_T 280,6315
+#  define YYSIZE_T 283,6424
+#  define YYSIZE_T 285,6457
+#define YYSIZE_MAXIMUM 289,6505
+#   define YY_(295,6675
+#  define YY_(299,6761
+#  define YY_ATTRIBUTE(307,7018
+#  define YY_ATTRIBUTE(309,7074
+# define YY_ATTRIBUTE_PURE 314,7157
+# define YY_ATTRIBUTE_UNUSED 318,7248
+#  define _Noreturn 324,7445
+#  define _Noreturn 326,7494
+# define YYUSE(332,7654
+# define YYUSE(334,7691
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN 339,7866
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END 343,8076
+# define YY_INITIAL_VALUE(346,8162
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN349,8252
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END350,8297
+# define YY_INITIAL_VALUE(353,8372
+#    define YYSTACK_ALLOC 364,8620
+#    define YYSTACK_ALLOC 368,8783
+#    define alloca 371,8903
+#    define YYSTACK_ALLOC 373,8939
+#      define EXIT_SUCCESS 378,9169
+#  define YYSTACK_FREE(387,9319
+#   define YYSTACK_ALLOC_MAXIMUM 393,9709
+#  define YYSTACK_ALLOC 396,9791
+#  define YYSTACK_FREE 397,9824
+#   define YYSTACK_ALLOC_MAXIMUM 399,9886
+#    define EXIT_SUCCESS 406,10183
+#   define YYMALLOC 410,10248
+#   define YYFREE 416,10421
+union yyalloc431,10884
+  yytype_int16 yyss_alloc;yyalloc::yyss_alloc433,10900
+  YYSTYPE yyvs_alloc;yyalloc::yyvs_alloc434,10927
+  YYLTYPE yyls_alloc;yyalloc::yyls_alloc435,10949
+# define YYSTACK_GAP_MAXIMUM 439,11050
+# define YYSTACK_BYTES(443,11198
+# define YYCOPY_NEEDED 447,11336
+# define YYSTACK_RELOCATE(454,11645
+#   define YYCOPY(472,12524
+#   define YYCOPY(475,12630
+#define YYFINAL 488,13099
+#define YYLAST 490,13158
+#define YYNTOKENS 493,13221
+#define YYNNTS 495,13284
+#define YYNRULES 497,13339
+#define YYNSTATES 499,13398
+#define YYUNDEFTOK 503,13538
+#define YYMAXUTOK 504,13560
+#define YYTRANSLATE(506,13585
+static const yytype_uint8 yytranslate[yytranslate511,13861
+static const yytype_uint8 yyrline[yyrline548,16255
+static const char *const yytname[yytname563,16939
+static const yytype_uint16 yytoknum[yytoknum587,18190
+#define YYPACT_NINF 598,18646
+#define yypact_value_is_default(600,18671
+#define YYTABLE_NINF 603,18742
+#define yytable_value_is_error(605,18767
+static const yytype_int8 yypact[yypact610,18909
+static const yytype_uint8 yydefact[yydefact628,19876
+static const yytype_int8 yypgoto[yypgoto644,20689
+static const yytype_int8 yydefgoto[yydefgoto652,20939
+static const yytype_uint8 yytable[yytable662,21364
+static const yytype_int8 yycheck[yycheck679,22293
+static const yytype_uint8 yystos[yystos698,23322
+static const yytype_uint8 yyr1[yyr1714,24173
+static const yytype_uint8 yyr2[yyr2726,24751
+#define yyerrok 738,25254
+#define yyclearin 739,25296
+#define YYEMPTY 740,25339
+#define YYEOF 741,25368
+#define YYACCEPT 743,25395
+#define YYABORT 744,25436
+#define YYERROR 745,25476
+#define YYRECOVERING(748,25518
+#define YYBACKUP(750,25559
+#define YYTERROR 768,26574
+#define YYERRCODE 769,26600
+# define YYLLOC_DEFAULT(777,26835
+#define YYRHSLOC(796,28041
+#  define YYFPRINTF 804,28205
+# define YYDPRINTF(807,28242
+yy_location_print_ 825,28838
+#  define YY_LOCATION_PRINT(849,29571
+#  define YY_LOCATION_PRINT(853,29665
+# define YY_SYMBOL_PRINT(858,29732
+yy_symbol_value_print 875,30543
+yy_symbol_print 895,31000
+yy_stack_print 912,31688
+# define YY_STACK_PRINT(923,31938
+yy_reduce_print 935,32385
+# define YY_REDUCE_PRINT(954,33041
+int yydebug;962,33338
+# define YYDPRINTF(964,33372
+# define YY_SYMBOL_PRINT(965,33397
+# define YY_STACK_PRINT(966,33452
+# define YY_REDUCE_PRINT(967,33489
+# define YYINITDEPTH 973,33623
+# define YYMAXDEPTH 984,33979
+#   define yystrlen 992,34098
+yystrlen 996,34184
+#   define yystpcpy 1008,34410
+yystpcpy 1013,34548
+yytnamerr 1035,35196
+yysyntax_error 1083,36358
+  enum { YYERROR_VERBOSE_ARGS_MAXIMUM ::YYERROR_VERBOSE_ARGS_MAXIMUM1088,36555
+# define YYCASE_(1159,39744
+# undef YYCASE_1169,40295
+yydestruct 1215,41419
+int yychar;1232,41772
+YYSTYPE yylval;1235,41836
+YYLTYPE yylloc1237,41899
+int yynerrs;1243,42036
+yyparse 1251,42098
+#define YYPOPSTACK(1301,43356
+#  undef YYSTACK_RELOCATE1380,45885
+    break;1512,49155
+    break;1518,49337
+    break;1524,49507
+    break;1530,49661
+    break;1536,49816
+    break;1542,50020
+    break;1548,50245
+    break;1554,50467
+    break;1560,50693
+    break;1577,51507
+    break;1583,51711
+    break;1589,51920
+    break;1595,52090
+    break;1601,52344
+    break;1607,52601
+    break;1613,52765
+    break;1619,52956
+    break;1625,53120
+    break;1631,53276
+    break;1637,53431
+    break;1643,53587
+    break;1649,53744
+    break;1655,53937
+    break;1661,54123
+    break;1667,54315
+    break;1673,54507
+    break;1679,54662
+    break;1685,54816
+    break;1691,55004
+    break;1697,55171
+    break;1703,55339
+    break;1709,55505
+    break;1715,55673
+    break;1721,55840
+    break;1727,55994
+    break;1733,56200
+    break;1739,56365
+    break;1745,56531
+    break;1751,56696
+    break;1757,56863
+    break;1763,57017
+    break;1769,57223
+    break;1775,57386
+    break;1781,57549
+    break;1787,57716
+    break;1793,57882
+    break;1799,58048
+    break;1805,58214
+    break;1811,58368
+    break;1817,58593
+    break;1823,58788
+    break;1829,59027
+    break;1835,59238
+    break;1841,59431
+    break;1847,59578
+    break;1853,59755
+      default: break;1857,59816
+  yylen 1873,60718
+  *++yyvsp yyvsp1876,60764
+  *++yylsp yylsp1877,60784
+  yyn 1883,60971
+  yystate 1885,60991
+    yystate 1889,61148
+  goto yynewstate;1891,61191
+  yytoken 1900,61476
+# define YYSYNTAX_ERROR 1909,61718
+# undef YYSYNTAX_ERROR1938,62665
+  yyerror_range[yyerror_range1942,62702
+  goto yyerrlab1;1965,63258
+  yyerror_range[yyerror_range1979,63651
+  yylen 1983,63800
+  yystate 1985,63845
+  goto yyerrlab1;1986,63865
+  yyerrstatus 1993,64091
+      yyn 1997,64181
+      yyerror_range[yyerror_range2013,64601
+      yystate 2017,64742
+  *++yyvsp yyvsp2022,64847
+  yyerror_range[yyerror_range2025,64905
+  *++yylsp yylsp2029,65094
+  yystate 2034,65207
+  goto yynewstate;2035,65224
+  yyresult 2042,65381
+  goto yyreturn;2043,65397
+  yyresult 2049,65544
+  goto yyreturn;2050,65560
+  yyresult 2058,65833
+
+grammar.ypp,1258
+  char *name;YYSTYPE::name23,
+  enum Type type;YYSTYPE::type24,
+  Declaration *decl;YYSTYPE::decl26,
+  FuncDecl *funcDecl;YYSTYPE::funcDecl27,
+  Identifier *varDecl;YYSTYPE::varDecl28,
+  vector<IntConst *> *dimList;YYSTYPE::dimList29,
+  StatementBlock *stmtBlock;YYSTYPE::stmtBlock31,
+  vector<Statement *> *stmtList;YYSTYPE::stmtList32,
+  map<YYSTYPE::map33,
+  map<string, Identifier *> *varDecls;YYSTYPE::varDecls33,
+  vector<Identifier *> *parList;YYSTYPE::parList34,
+  Statement *stmt;YYSTYPE::stmt36,
+  ExprStatement *exprStmt;YYSTYPE::exprStmt37,
+  SelStatement *selStmt;YYSTYPE::selStmt38,
+  IterStatement *iterStmt;YYSTYPE::iterStmt39,
+  Expression *expr;YYSTYPE::expr41,
+  OpExpression *opExpr;YYSTYPE::opExpr42,
+  Operator *op;YYSTYPE::op43,
+  Access *access;YYSTYPE::access44,
+  int intConst_t;YYSTYPE::intConst_t46,
+  bool boolConst_t;YYSTYPE::boolConst_t47,
+  char *stringConst_t;YYSTYPE::stringConst_t48,
+  double doubleConst_t;YYSTYPE::doubleConst_t49,
+  IntConst *intConst;YYSTYPE::intConst51,
+  BoolConst *boolConst;YYSTYPE::boolConst52,
+  StringConst *stringConst;YYSTYPE::stringConst53,
+  DoubleConst *doubleConst;YYSTYPE::doubleConst54,
+  case 1520,
+int yyerror(254,
+int main(259,
+
+lexer.l,0

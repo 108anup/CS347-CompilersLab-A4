@@ -1,0 +1,8 @@
+#include "mips.h"
+
+void EmitPreamble()
+{
+  //printf(".text");
+  //printf(".align 2");
+  //printf(".globl main");
+}

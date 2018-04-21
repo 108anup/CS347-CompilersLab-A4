@@ -3,3 +3,7 @@ src/grammar.tab.*
 src/lex.yy.*
 src/parser
 *.o
+src/cscope*
+src/TAGS
+*~
+*#

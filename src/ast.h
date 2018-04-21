@@ -30,6 +30,9 @@ class StringConst;
 class BoolConst;
 class DoubleConst;
 
+extern const int VAR_SIZE;
+extern const int OFFSET_FIRST_PARAM;
+extern const int OFFSET_FIRST_LOCAL;
 enum Type {T_VOID, T_CHAR, T_INT, T_FLOAT, T_BOOL, T_STRING, T_ERROR};
 extern string TypeNames[];
 
@@ -46,14 +49,18 @@ public:
 
 	Ast();
 	Ast(YYLTYPE loc);
-	virtual void dummy() {}
+  virtual void Emit() {}
 	virtual ~Ast() {}
 };
 
 class Declaration : public Ast{
 public:
-	Declaration(YYLTYPE loc) : Ast(loc) {}
 	string name;
+  int offset;
+  string label;
+  
+  Declaration(YYLTYPE loc) : Ast(loc) {offset = -1;}
+
 };
 
 class Identifier : public Declaration{
@@ -61,7 +68,7 @@ public:
 	bool is_array;
 	enum Type elem_type;
 	vector<IntConst *> *dim_list;
-	int scope;
+	bool is_global;
 
 	Identifier();
 	Identifier(YYLTYPE, enum Type, char *, vector<IntConst *> *);
@@ -72,13 +79,15 @@ class FuncDecl : public Declaration{
 public:
 	YYLTYPE return_loc;
 	enum Type return_type;
-
+  
 	vector<Identifier *> *param_list;
 	StatementBlock *stmt_block;
-
+  
 	FuncDecl();
 	FuncDecl(YYLTYPE loc, YYLTYPE ret_loc, enum Type t, char *name, 
 	vector<Identifier *> *pl, StatementBlock *sb);
+  void CalcOffsets();
+  void Emit();
 };
 
 class Statement : public Ast{
@@ -91,6 +100,7 @@ public:
 	Expression *expr;
 	ExprStatement(Expression *);
 	void CheckStatement();
+  void Emit();
 };
 
 class SelStatement : public Statement{
@@ -120,10 +130,13 @@ class StatementBlock : public Statement{
 public:
 	vector<Statement *> *stmt_list;
 	map<string, Identifier *> *symbol_table;
-
-	StatementBlock();
+  int frame_size;
+  
+	StatementBlock() {frame_size = 0;}
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
 	void CheckStatements();
+  void CalcOffsets();
+  void Emit();
 };
 
 class Operator : public Ast{
@@ -139,7 +152,7 @@ public:
 	Expression() {}
 	Expression(YYLTYPE loc) : Ast(loc) {}
 
-	virtual void CheckExpression() {}
+	virtual void CheckExpression() {}  
 };
 
 class Access : public Expression{
@@ -149,6 +162,7 @@ public:
 	Access(YYLTYPE, string);
 
 	void CheckExpression();
+  void Emit();
 };
 
 class OpExpression : public Expression {
@@ -161,6 +175,7 @@ public:
 	OpExpression(Operator *, Expression *);
 
 	void CheckExpression();
+  void Emit();
 };
 
 class IntConst : public Expression{
@@ -168,6 +183,7 @@ public:
 	int val;
 	IntConst() {type = T_INT;}
 	IntConst(YYLTYPE, int);
+  void Emit();
 };
 
 class StringConst : public Expression{
@@ -230,6 +246,7 @@ void CheckAndInsertIntoSymTable(vector<Identifier *> *, Identifier *);
 StatementBlock* GetEnclosingStatementBlockParent(Ast *);
 FuncDecl* GetEnclosingFuncParent(Ast *);
 enum Type Coercible(Operator *, enum Type, enum Type);
+enum Type Coercible(Operator *, enum Type);
 
 
 #endif

@@ -1,0 +1,8 @@
+#ifndef MIPS_H
+#define MIPS_H
+
+#include "ast.h"
+
+void EmitPreamble();
+
+#endif
