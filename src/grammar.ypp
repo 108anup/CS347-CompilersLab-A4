@@ -110,7 +110,7 @@ program: declaration_list {
        i != global_sym_table->end(); ++i)
   {
     if(typeid(*(i->second)) == typeid(FuncDecl)){
-      function = dynamic_cast<FuncDecl *>(i->second); 
+      function = dynamic_cast<FuncDecl *>(i->second);
       function->stmt_block->CheckStatement();
     }
   }

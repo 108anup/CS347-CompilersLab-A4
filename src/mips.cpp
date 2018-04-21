@@ -223,7 +223,7 @@ void Call::Emit(){
     (*args)[i]->Emit();
     PushRegToStack("a0");
   }
-  printf("jal %s\n", this->fd->label.c_str());
+  printf("jal %s\n", this->fd->name.c_str());
 }
 
 void ReturnStatement::Emit(){
@@ -231,7 +231,7 @@ void ReturnStatement::Emit(){
     this->expr->Emit();
   }
 
-  printf("lw $ra $fp\n");
+  printf("lw $ra 0($fp)\n");
   printf("addiu $sp $fp %d\n", 4 + VAR_SIZE * this->fd->param_list->size());
   printf("lw $fp 4($sp)\n");
   printf("jr $ra\n");
