@@ -106,8 +106,20 @@ void NumArgsMismatch(FuncDecl *fn, int numExpected, int numGiven) {
 void ArgMismatch(Expression *arg, int argIndex,
                  enum Type given, enum Type expected) {
   ostringstream s;
-  s << "Incompatible argument " << argIndex << ": " << TypeNames[given] << " given, " << TypeNames[expected] << " expected";
+  s << "Incompatible argument(s) for function at index " << argIndex << ": " << TypeNames[given] << " given, " << TypeNames[expected] << " expected";
   OutputError(arg->loc, s.str());
+}
+
+void UnexpectedReturn(YYLTYPE *loc){
+ ostringstream s;
+  s << "Unexpected return statement";
+  OutputError(loc, s.str());
+}
+
+void ReturnMismatch(YYLTYPE *loc, enum Type given, enum Type expected) {
+    ostringstream s;
+    s << "Incompatible return: " << TypeNames[given] << " given, " << TypeNames[expected] << " expected";
+    OutputError(loc, s.str());
 }
 
 int numErrors = 0;
@@ -135,11 +147,5 @@ void ReportError::SubscriptNotInteger(Expr *subscriptExpr) {
 
 void ReportError::NewArraySizeNotInteger(Expr *sizeExpr) {
     OutputError(sizeExpr->GetLocation(), "Size for NewArray must be an integer");
-}
-
-void ReportError::ReturnMismatch(ReturnStmt *rStmt, Type *given, Type *expected) {
-    ostringstream s;
-    s << "Incompatible return: " << given << " given, " << expected << " expected";
-    OutputError(rStmt->GetLocation(), s.str());
 }
 */

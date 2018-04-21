@@ -8,7 +8,7 @@ using namespace std;
 
 const int VAR_SIZE = 4;
 const int OFFSET_FIRST_PARAM = 4;
-const int OFFSET_FIRST_LOCAL = -8;
+const int OFFSET_FIRST_LOCAL = -4;
 map<string, Declaration *> *global_sym_table;
 string TypeNames[] = {"void", "char", "int", "float", "bool", "string", "error"};
 
@@ -95,6 +95,11 @@ ExprStatement::ExprStatement(Expression *e){
 	e->parent = this;
 }
 
+ReturnStatement::ReturnStatement(YYLTYPE loc, Expression *expr) : Statement(loc){
+  this->expr= expr;
+  this->expr->parent = this;
+}
+
 Access::Access(YYLTYPE loc, string name) : Expression(loc){
 	this->name = name;
 }
@@ -149,7 +154,8 @@ SelStatement::SelStatement(Expression *e, Statement *s1, Statement *s2){
 
 	e->parent = this;
 	s1->parent = this;
-	s2->parent = this;
+  if(s2 != NULL)
+    s2->parent = this;
 }
 
 SelStatement::SelStatement(Expression *e, Statement *s1){
@@ -228,6 +234,25 @@ void IterStatement::CheckStatement(){
   this->body->CheckStatement();
 }
 
+void ReturnStatement::CheckStatement(){
+  FuncDecl *funcd = GetEnclosingFuncParent(this);
+  if(funcd == NULL){
+    UnexpectedReturn(this->loc);
+  }
+  this->fd = funcd;
+  if(this->expr){
+    this->expr->CheckExpression();
+    if(this->expr->type != fd->return_type){
+      ReturnMismatch(this->loc, this->expr->type, fd->return_type);
+    }
+  }
+  else{
+    if(T_VOID != fd->return_type){
+      ReturnMismatch(this->loc, T_VOID, fd->return_type);
+    }
+  }
+}
+
 void Access::CheckExpression(){
   StatementBlock *sb;
   FuncDecl *f;
@@ -288,7 +313,8 @@ void Call::CheckExpression(){
     else{
       this->fd = dynamic_cast<FuncDecl *>((*global_sym_table)[this->name]);
       this->type = this->fd->return_type;
-
+      //printf("Type: %s", TypeNames[this->fd->return_type].c_str());
+      
       int num_expected = fd->param_list->size();
       int num_given = this->args->size();
       if(num_expected != num_given){
@@ -297,6 +323,7 @@ void Call::CheckExpression(){
       }
       else{
         for(int i = 0; i<num_given; i++){
+          (*this->args)[i]->CheckExpression();
           if((*this->args)[i]->type != (*fd->param_list)[i]->elem_type){
             ArgMismatch(this, i+1, (*this->args)[i]->type,
                         (*fd->param_list)[i]->elem_type);

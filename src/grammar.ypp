@@ -104,6 +104,17 @@
 program: declaration_list {
   setParent(global_sym_table, NULL);
   Identifier *identifier;
+  FuncDecl *function;
+  
+  for (map<string, Declaration *>::iterator i = global_sym_table->begin();
+       i != global_sym_table->end(); ++i)
+  {
+    if(typeid(*(i->second)) == typeid(FuncDecl)){
+      function = dynamic_cast<FuncDecl *>(i->second); 
+      function->stmt_block->CheckStatement();
+    }
+  }
+  
   if(numErrors == 0){
     printf(".data\n");
     for (map<string, Declaration *>::iterator i = global_sym_table->begin(); i != global_sym_table->end(); ++i)
@@ -166,7 +177,6 @@ function_declaration
     }
   }
   $$ = new FuncDecl(@2, @1, $1, $2, $4, $6);
-  $$->stmt_block->CheckStatement();
   $$->CalcOffsets();
 }
 ;
@@ -204,6 +214,8 @@ statement
 | selection_statement {$$ = $1;}
 | iteration_statement {$$ = $1;}
 | statement_block {$$ = $1;}
+| RETURN SEMI {$$ = new ReturnStatement(@1, NULL);}
+| RETURN assignment_expression SEMI {$$ = new ReturnStatement(@1, $2);}
 ;
 
 primary_expression

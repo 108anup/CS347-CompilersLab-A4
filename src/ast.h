@@ -91,6 +91,8 @@ public:
 
 class Statement : public Ast{
 public:
+  Statement() {}
+  Statement(YYLTYPE loc) : Ast(loc) {}
 	virtual void CheckStatement() {}
 };
 
@@ -138,6 +140,17 @@ public:
 	StatementBlock(map<string, Identifier *> *, vector<Statement *> *);
 	void CheckStatement();
   void CalcOffsets();
+  void Emit();
+};
+
+class ReturnStatement : public Statement{
+public:
+  Expression *expr;
+  FuncDecl *fd;
+  
+  ReturnStatement(YYLTYPE loc) : Statement(loc) {expr = NULL;}
+  ReturnStatement(YYLTYPE, Expression *);
+	void CheckStatement();
   void Emit();
 };
 

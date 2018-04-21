@@ -218,5 +218,21 @@ void Access::Emit(){
 }
 
 void Call::Emit(){
-  
+  PushRegToStack("fp");
+  for(int i=this->args->size()-1; i>=0; i--){
+    (*args)[i]->Emit();
+    PushRegToStack("a0");
+  }
+  printf("jal %s\n", this->fd->label.c_str());
+}
+
+void ReturnStatement::Emit(){
+  if(this->expr != NULL){
+    this->expr->Emit();
+  }
+
+  printf("lw $ra $fp\n");
+  printf("addiu $sp $fp %d\n", 4 + VAR_SIZE * this->fd->param_list->size());
+  printf("lw $fp 4($sp)\n");
+  printf("jr $ra\n");
 }

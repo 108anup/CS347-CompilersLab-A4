@@ -23,6 +23,8 @@ void InvalidFuncCall(YYLTYPE *, string);
 void VariableNotFunction(YYLTYPE *, string);
 void NumArgsMismatch(FuncDecl *, int, int);
 void ArgMismatch(Expression *, int, enum Type, enum Type);
+void UnexpectedReturn(YYLTYPE *);
+void ReturnMismatch(YYLTYPE *, enum Type, enum Type);
 void TestNotBoolean(Expression *);
 void NoMainFound();
 void yyerror(const char *);
