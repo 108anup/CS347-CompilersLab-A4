@@ -118,7 +118,7 @@ void IterStatement::Emit(){
 }
 
 void LogicalNot(char *s){
-  printf("xori $%s $%s 0xFFFF\n", s, s);
+  printf("xori $%s $%s 1\n", s, s);
 }
 
 void OpExpression::Emit(){
@@ -231,8 +231,14 @@ void ReturnStatement::Emit(){
     this->expr->Emit();
   }
 
-  printf("lw $ra 0($fp)\n");
-  printf("addiu $sp $fp %d\n", 4 + VAR_SIZE * this->fd->param_list->size());
-  printf("lw $fp 4($sp)\n");
-  printf("jr $ra\n");
+  if(this->fd->name != "main"){
+    printf("lw $ra 0($fp)\n");
+    printf("addiu $sp $fp %d\n", 4 + VAR_SIZE * this->fd->param_list->size());
+    printf("lw $fp 4($sp)\n");
+    printf("jr $ra\n");
+  }
+  else{
+    printf("li $v0 17\n");
+    printf("syscall\n");
+  }
 }
