@@ -182,6 +182,7 @@ public:
 
 	void CheckExpression();
   void Emit();
+  void EmitLval();
 };
 
 class Call : public Expression{

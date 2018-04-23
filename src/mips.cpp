@@ -136,11 +136,7 @@ void OpExpression::Emit(){
   rhs->Emit();
   if(op->op == ASSIGN){
     a = dynamic_cast<Access *>(lhs);
-    if(a->id->is_global){
-      printf("sw $a0 %s\n", a->id->label.c_str());
-    }
-    else
-      printf("sw $a0 %d($fp)\n", a->id->offset);
+    a->EmitLval();
     return;
   }
   if(lhs != NULL){
@@ -226,24 +222,28 @@ void Access::Emit(){
       (*access_list)[i]->Emit();
       if(i != this->access_list->size() - 1){
         printf("li $t1 %d\n", (*this->id->dim_list)[i]->val);
-        printf("mult $a0 $a0 $t1\n");
+        printf("mult $a0 $t1\n");
+        printf("mflo $a0\n");
       }
       if(i != 0){
-        printf("add $a0 $a0 4($sp)\n");
+        printf("lw $t1 4($sp)\n");
+        printf("add $a0 $a0 $t1\n");
       }
       if(i != this->access_list->size() - 1)
         PushRegToStack("a0");
     }
     printf("addiu $sp $sp %lu\n", (this->access_list->size() - 1) * VAR_SIZE);
     printf("move $t1 $a0\n");
+    printf("li $a0 4\n");
+    printf("mult $t1 $a0\n");
+    printf("mflo $t1\n");
     // $t1 has the array offset and stack is unchanged
   }
   
   if(this->id->is_global){
     if(this->is_array){
-      printf("li $a0 %s\n", this->id->label.c_str());
+      printf("la $a0 %s\n", this->id->label.c_str());
       printf("add $a0 $a0 $t1\n");
-      printf("add $a0 $a0 $fp\n");
       printf("lw $a0 0($a0)\n");
     }
     else
@@ -259,6 +259,65 @@ void Access::Emit(){
     else
       printf("lw $a0 %d($fp)\n", this->id->offset);
   }
+}
+
+void Access::EmitLval(){
+  if(this->is_array){
+    PushRegToStack("a0");
+    for(int i = 0; i<this->access_list->size(); i++){
+      (*access_list)[i]->Emit();
+      if(i != this->access_list->size() - 1){
+        printf("li $t1 %d\n", (*this->id->dim_list)[i]->val);
+        printf("mult $a0 $t1\n");
+        printf("mflo $a0\n");
+      }
+      if(i != 0){
+        printf("lw $t1 4($sp)\n");
+        printf("add $a0 $a0 $t1\n");
+      }
+      if(i != this->access_list->size() - 1)
+        PushRegToStack("a0");
+    }
+    printf("addiu $sp $sp %lu\n", (this->access_list->size() - 1) * VAR_SIZE);
+    printf("move $t1 $a0\n");
+    printf("li $a0 4\n");
+    printf("mult $t1 $a0\n");
+    printf("mflo $t1\n");
+    // $t1 has the array offset and stack is unchanged
+  }
+  
+  if(this->id->is_global){
+    if(this->is_array){
+      printf("la $a0 %s\n", this->id->label.c_str());
+      printf("add $a0 $a0 $t1\n");
+      printf("lw $t2 4($sp)\n");
+      printf("sw $t2 0($a0)\n");
+      printf("lw $a0 4($sp)\n"); //Return value of assignment is $a0
+      PopFromStack();
+    }
+    else
+      printf("sw $a0 %s\n", this->id->label.c_str());
+  }
+  else{
+    if(this->is_array){
+      printf("li $a0 %d\n", this->id->offset);
+      printf("add $a0 $a0 $t1\n");
+      printf("add $a0 $a0 $fp\n");
+      printf("lw $t2 4($sp)\n");
+      printf("sw $t2 0($a0)\n");
+      printf("lw $a0 4($sp)\n"); //Return value of assignment is $a0
+      PopFromStack();
+    }
+    else
+      printf("sw $a0 %d($fp)\n", this->id->offset);
+  }
+/*      
+        if(a->id->is_global){
+        printf("sw $a0 %s\n", a->id->label.c_str());
+        }
+        else
+        printf("sw $a0 %d($fp)\n", a->id->offset);
+*/
 }
 
 void Call::Emit(){

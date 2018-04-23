@@ -128,7 +128,22 @@ program: declaration_list {
         identifier = dynamic_cast<Identifier *>(i->second);
         identifier->is_global = true;
         identifier->label = "v_" + identifier->name;
-        printf("%s: .word 0\n", identifier->label.c_str());
+        int pdt = 1;
+        if(identifier->is_array){
+          for(int j = 0; j<identifier->dim_list->size(); j++){
+            pdt *= (*identifier->dim_list)[j]->val;
+            if(pdt == 0){
+              OutputError((*identifier->dim_list)[j]->loc,
+                          "Array size can't be zero");
+              return -1;
+            }
+          }
+        }
+        printf("%s: .word ", identifier->label.c_str());
+        for(int j = 0; j<pdt-1; j++){
+          printf("0, ");
+        }
+        printf("0 \n");
       }      
  	  }
     EmitPreamble();

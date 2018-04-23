@@ -38,6 +38,7 @@ Identifier::Identifier(YYLTYPE loc, enum Type t, char *name, vector<IntConst *> 
 	this->is_array  = true;
 	this->elem_type = t;
   this->is_global = false;
+  this->dim_list = dimList;
   setParent(dimList, this);
 }
 
@@ -109,6 +110,8 @@ Access::Access(YYLTYPE loc, string name, vector<Expression *> *v) : Expression(l
 	this->name = name;
   this->access_list = v;
   this->is_array = true;
+
+  setParent(v, this);
 }
 
 Call::Call(YYLTYPE loc, string name, vector<Expression *> *args) : Expression(loc){
@@ -207,8 +210,8 @@ void StatementBlock::CheckStatement(){
 
 //Override Base class function
 void ExprStatement::CheckStatement(){
-	Access *a;
-	this->expr->CheckExpression();
+  if(this->expr)
+    this->expr->CheckExpression();
 }
 
 void SelStatement::CheckStatement(){
