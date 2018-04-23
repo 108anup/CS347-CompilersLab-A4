@@ -306,7 +306,7 @@ conditional_expression
 
 assignment_expression
 : conditional_expression { $$ = $1; }
-| ID ASSIGN assignment_expression { $$ = new OpExpression(new Operator(@2, ASSIGN), new Access(@1, *(new string($1))), $3); }
+| id_arr ASSIGN assignment_expression { $$ = new OpExpression(new Operator(@2, ASSIGN), $1, $3); }
 ;
 
 iteration_statement
