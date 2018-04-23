@@ -96,8 +96,10 @@
 %type <selStmt> selection_statement
 %type <iterStmt> iteration_statement
 
+%type <argList> argument_bracket_list
 %type <expr> primary_expression unary_expression binary_arith_expression conditional_expression assignment_expression
-%type <op> unary_operator binary_operator conditional_operator
+%type <op> unary_operator conditional_operator
+%type <access> id_arr
 
 %%
 
@@ -219,7 +221,7 @@ statement
 ;
 
 primary_expression
-: ID { $$ = new Access(@1, *(new string($1))); }
+: id_arr {$$ = $1;}
 | NUM { $$ = new IntConst(@1, $1); }
 | REAL { $$ = new DoubleConst(@1, $1); }
 | STRING_LITERAL { $$ = new StringConst(@1, $1); }
@@ -227,8 +229,22 @@ primary_expression
 | ID OPEN_BRACKET argument_expression_list CLOSED_BRACKET {
   $$ = new Call(@1, *(new string($1)), $3);
  }
-// TODO:: Add Function Call
 // TODO:: Add array access
+;
+
+id_arr
+: ID { $$ = new Access(@1, *(new string($1))); }
+| ID argument_bracket_list {$$ = new Access (@1, *(new string($1)), $2);}
+;
+
+argument_bracket_list
+: argument_bracket_list OPEN_SQUARE assignment_expression CLOSED_SQUARE {
+  ($$ = $1)->push_back($3);
+ }
+| OPEN_SQUARE assignment_expression CLOSED_SQUARE {
+  $$ = new vector<Expression *>;
+  $$->push_back($2);
+ }
 ;
 
 argument_expression_list
@@ -252,15 +268,11 @@ unary_operator
 
 binary_arith_expression
 : unary_expression { $$ = $1; }
-| binary_arith_expression binary_operator unary_expression { $$ = new OpExpression($2, $1, $3); }
-;
-
-binary_operator
-: PLUS {$$ = new Operator(@1, PLUS);}
-| MINUS {$$ = new Operator(@1, MINUS);}
-| STAR {$$ = new Operator(@1, STAR);}
-| DIVIDE {$$ = new Operator(@1, DIVIDE);}
-| MODULUS {$$ = new Operator(@1, MODULUS);}
+| binary_arith_expression PLUS unary_expression { $$ = new OpExpression(new Operator(@1, PLUS), $1, $3); }
+| binary_arith_expression MINUS unary_expression { $$ = new OpExpression(new Operator(@1, MINUS), $1, $3); }
+| binary_arith_expression STAR unary_expression { $$ = new OpExpression(new Operator(@1, STAR), $1, $3); }
+| binary_arith_expression DIVIDE unary_expression { $$ = new OpExpression(new Operator(@1, DIVIDE), $1, $3); }
+| binary_arith_expression MODULUS unary_expression { $$ = new OpExpression(new Operator(@1, MODULUS), $1, $3); }
 ;
 
 conditional_expression

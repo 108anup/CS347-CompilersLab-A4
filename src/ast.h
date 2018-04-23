@@ -174,7 +174,11 @@ class Access : public Expression{
 public:
 	Identifier *id;
 	string name;
+  bool is_array;
+  vector<Expression *> * access_list;
+  
 	Access(YYLTYPE, string);
+	Access(YYLTYPE, string, vector<Expression *> *);
 
 	void CheckExpression();
   void Emit();

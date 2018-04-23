@@ -27,6 +27,10 @@ void UnexpectedReturn(YYLTYPE *);
 void ReturnMismatch(YYLTYPE *, enum Type, enum Type);
 void TestNotBoolean(Expression *);
 void NoMainFound();
+void BracketsOnNonArray(Access *);
+void ArrayWithoutDim(Access *);
+void NumDimsMismatch(Access *, int, int);
+void SubscriptNotInteger(Expression *);
 void yyerror(const char *);
 
 extern int numErrors;

@@ -11,6 +11,10 @@ static void PushRegToStack(char *reg){
   printf("sw $%s 4($sp)\n", reg);
 }
 
+static void PopFromStack(){
+  printf("addiu $sp $sp 4\n");
+}
+
 static string GetLabel(){
   static int num_label = 0;
   ostringstream s;
@@ -51,15 +55,21 @@ void FuncDecl::CalcOffsets(){
 
 void StatementBlock::CalcOffsets(){
   int currentOffset = OFFSET_FIRST_LOCAL;
-  int numVars = 0;
+  int fs = 0;
   for (map<string, Identifier *>::iterator i = this->symbol_table->begin();
        i != symbol_table->end(); ++i)
   {
     (i->second)->offset = currentOffset;
-    currentOffset -= VAR_SIZE;
-    numVars++;
+    int pdt = 1;
+    if(i->second->is_array){
+      for(int j = 0; j<i->second->dim_list->size(); j++){
+        pdt *= (*(i->second->dim_list))[j]->val;
+      }
+    }
+    currentOffset -= pdt*VAR_SIZE;
+    fs += pdt*VAR_SIZE;
   }
-  this->frame_size = numVars*4;
+  this->frame_size = fs;
 }
 
 void StatementBlock::Emit(){
@@ -141,35 +151,35 @@ void OpExpression::Emit(){
       printf("lw $t1 4($sp)\n");
       printf("slt $a0 $a0 $t1\n");
       LogicalNot("a0");
-      return;
+      break;
     case EQ_OP:
       printf("lw $t1 4($sp)\n");
       printf("slt $t2 $a0 $t1\n");
       printf("slt $t3 $t1 $a0\n");
       printf("or $a0 $t2 $t3\n");
       LogicalNot("a0");
-      return;
+      break;
     case NE_OP:
       printf("lw $t1 4($sp)\n");
       printf("slt $t1 $a0 $t1\n");
       printf("slt $t2 $t1 $a0\n");
       printf("or $a0 $t1 $t2\n");
-      return;
+      break;
     case STAR:
       printf("lw $t1 4($sp)\n");
       printf("mult $a0 $t1\n");
       printf("mflo $a0\n");
-      return;
+      break;
     case DIVIDE:
       printf("lw $t1 4($sp)\n");
       printf("div $a0 $t1\n");
       printf("mflo $a0\n");
-      return;
+      break;
     case MODULUS:
       printf("lw $t1 4($sp)\n");
       printf("div $a0 $t1\n");
       printf("mfhi $a0\n");
-      return;
+      break;
     //PLUS MINUS AND_OP OR_OP LT
     case PLUS:
     case MINUS:
@@ -178,11 +188,12 @@ void OpExpression::Emit(){
     case LT:
       printf("lw $t1 4($sp)\n");
       printf("%s $a0 $a0 $t1\n", opcodes[op->op].c_str());
-      return;
+      break;
     default:
       Formatted(NULL, "CodeGen: Op %d not found", op->op);
-      return;
+      break;
     }
+    PopFromStack();
   }
   else{
 
@@ -213,8 +224,16 @@ void Access::Emit(){
   if(this->id->is_global){
     printf("lw $a0 %s\n", this->id->label.c_str());
   }
-  else
-    printf("lw $a0 %d($fp)\n", this->id->offset);
+  else{
+    if(this->is_array){
+      for(int i = 0; i<this->access_list->size(); i++){
+        (*access_list)[i]->Emit();
+        PushRegToStack("a0");
+      }
+    }
+    else
+      printf("lw $a0 %d($fp)\n", this->id->offset);
+  }
 }
 
 void Call::Emit(){

@@ -102,6 +102,13 @@ ReturnStatement::ReturnStatement(YYLTYPE loc, Expression *expr) : Statement(loc)
 
 Access::Access(YYLTYPE loc, string name) : Expression(loc){
 	this->name = name;
+  this->is_array = false;
+}
+
+Access::Access(YYLTYPE loc, string name, vector<Expression *> *v) : Expression(loc){
+	this->name = name;
+  this->access_list = v;
+  this->is_array = true;
 }
 
 Call::Call(YYLTYPE loc, string name, vector<Expression *> *args) : Expression(loc){
@@ -263,7 +270,7 @@ void Access::CheckExpression(){
     if(sb->symbol_table->find(this->name) != sb->symbol_table->end()){
       this->id = (*(sb->symbol_table))[this->name];
       this->type = this->id->elem_type;
-      return;
+      goto check_for_array;
     }
     sb = GetEnclosingStatementBlockParent((Ast *) sb);
   }
@@ -275,7 +282,7 @@ void Access::CheckExpression(){
     if((*f->param_list)[i]->name == this->name){
       this->id = (*f->param_list)[i];
       this->type = this->id->elem_type;
-      return;
+      goto check_for_array;
     }
   }
 
@@ -284,16 +291,55 @@ void Access::CheckExpression(){
     IdentifierNotDeclared(this->loc, this->name);
     this->id = NULL;
     this->type = T_ERROR;
+    return;
   }
   else{
     if(typeid(Identifier) != typeid(*((*global_sym_table)[this->name]))){
       InvalidFuncCall(this->loc, this->name);
       this->id = NULL;
       this->type = T_ERROR;
+      return;
     }
     else{
       this->id = dynamic_cast<Identifier *>((*global_sym_table)[this->name]);
       this->type = this->id->elem_type;
+      goto check_for_array;
+    }
+  }
+
+check_for_array:
+  if(this->id->is_array && !this->is_array){
+    ArrayWithoutDim(this);
+    this->id = NULL;
+    this->type = T_ERROR;
+  }
+  else if(!this->id->is_array && this->is_array){
+    BracketsOnNonArray(this);
+    this->id = NULL;
+    this->type = T_ERROR;
+  }
+  else if (this->id->is_array && this->is_array){
+    if(this->access_list->size() != this->id->dim_list->size()){
+      NumDimsMismatch(this, this->id->dim_list->size(),
+                      this->access_list->size());
+      this->id = NULL;
+      this->type = T_ERROR;
+      return;
+    }
+
+    bool has_error = false;
+    for(int i = 0; i<access_list->size(); i++){
+      (*access_list)[i]->CheckExpression();
+      if((*access_list)[i]->type != T_INT &&
+         (*access_list)[i]->type != T_ERROR){
+        SubscriptNotInteger((*access_list)[i]);
+        has_error = true;
+      }
+    }
+
+    if(has_error){
+      this->id = NULL;
+      this->type = T_ERROR;
     }
   }
 }
